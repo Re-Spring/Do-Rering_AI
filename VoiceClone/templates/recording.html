@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Recorder</title>
+</head>
+<body>
+    <h1>User Voice Recording</h1>
+    <!-- 사용자가 회원 아이디를 입력할 수 있는 텍스트 입력 필드 -->
+    <input type="text" id="userId" placeholder="영문+숫자 6자리" required>
+    <label for="userId">회원 아이디 입력</label><br>
+    <!-- 녹음 시작, 녹음 완료, 재생, 저장 버튼 -->
+    <h2>목소리 등록을 위해 회원님의 음성으로 총 3개의 구절을 녹음합니다.</h2>
+    <h2>녹음은 가능한 잡음이 적은 환경에서 해주세요.</h2>
+    <h2>녹음 완료 후 마음에 들지 않을 시 재녹음이 가능합니다.</h2>
+    <h3>1번</h3>
+    <h4>벚꽃이 피면 사람들은 말한대. <br>
+        봄이 왔다. 기분 좋다. <br>
+        그런데 벚꽃에는 사람들이 모르는 향기로운 비밀이 있대. <br>
+        벚꽃이 지면 그때야 알게 돼. <br>
+        딱 일주일, 길면 이 주. 찰나를 살고 찰나 속에 가는 벚꽃이란 그리움인걸.</h4>
+    <button id="startButton1">녹음 시작</button>
+    <button id="stopButton1" disabled>녹음 완료</button>
+    <button id="playButton1" disabled>들어보기</button>
+    <button id="saveButton1" disabled>등록하기</button>
+    <br>
+    <h3>2번</h3>
+    <h4>내가 눈 떴을 때 때는 바야흐로 봄이었다. <br>
+        대지는 척박하고 바람은 거칠었다. <br>
+        뿌리를 잘못 내린 듯 아무도 축복하지 않았지만, <br>
+        그래도 봄은 아름다웠다.</h4>
+    <button id="startButton2">녹음 시작</button>
+    <button id="stopButton2" disabled>녹음 완료</button>
+    <button id="playButton2" disabled>들어보기</button>
+    <button id="saveButton2" disabled>등록하기</button>
+    <br>
+    <h3>3번</h3>
+    <h4>다시 봄 봄 봄 봄이 왔네요. <br>
+        그대 없었던 내 가슴 시렸던 겨울을 지나 <br>
+        또 벚꽃잎이 피어나듯이, <br>
+        다시 이 벤치에 앉아 추억을 그려보네요.</h4>
+    <button id="startButton3">녹음 시작</button>
+    <button id="stopButton3" disabled>녹음 완료</button>
+    <button id="playButton3" disabled>들어보기</button>
+    <button id="saveButton3" disabled>등록하기</button>
+    <!-- 녹음된 오디오를 재생할 수 있는 오디오 태그 -->
+    <audio controls id="audioPlayback" style="display: none;"></audio>
+
+    <br><br>
+    <button id="cloneVoice">목소리 클론하기</button>
+    <br><br>
+    <a href="/cloneHome">첫페이지로</a>
+
+    <script>
+        // 1번 녹음 버튼과 관련된 요소들
+        const startButton1 = document.getElementById('startButton1');
+        const stopButton1 = document.getElementById('stopButton1');
+        const playButton1 = document.getElementById('playButton1');
+        const saveButton1 = document.getElementById('saveButton1');
+
+        // 2번 녹음 버튼과 관련된 요소들
+        const startButton2 = document.getElementById('startButton2');
+        const stopButton2 = document.getElementById('stopButton2');
+        const playButton2 = document.getElementById('playButton2');
+        const saveButton2 = document.getElementById('saveButton2');
+
+        // 3번 녹음 버튼과 관련된 요소들
+        const startButton3 = document.getElementById('startButton3');
+        const stopButton3 = document.getElementById('stopButton3');
+        const playButton3 = document.getElementById('playButton3');
+        const saveButton3 = document.getElementById('saveButton3');
+
+        let mediaRecorder;
+        let chunks = [];
+
+        // 1번 녹음 시작 버튼 클릭 시 호출되는 함수
+        startButton1.addEventListener('click', () => startRecording(1));
+        // 1번 녹음 완료 버튼 클릭 시 호출되는 함수
+        stopButton1.addEventListener('click', () => stopRecording(1));
+        // 1번 녹음 들어보기 버튼 클릭 시 호출되는 함수
+        playButton1.addEventListener('click', () => playRecording(1));
+        // 1번 녹음 저장 버튼 클릭 시 호출되는 함수
+        saveButton1.addEventListener('click', () => saveRecording(1));
+
+        // 2번 녹음 시작 버튼 클릭 시 호출되는 함수
+        startButton2.addEventListener('click', () => startRecording(2));
+        // 2번 녹음 완료 버튼 클릭 시 호출되는 함수
+        stopButton2.addEventListener('click', () => stopRecording(2));
+        // 2번 녹음 들어보기 버튼 클릭 시 호출되는 함수
+        playButton2.addEventListener('click', () => playRecording(2));
+        // 2번 녹음 저장 버튼 클릭 시 호출되는 함수
+        saveButton2.addEventListener('click', () => saveRecording(2));
+
+        // 3번 녹음 시작 버튼 클릭 시 호출되는 함수
+        startButton3.addEventListener('click', () => startRecording(3));
+        // 3번 녹음 완료 버튼 클릭 시 호출되는 함수
+        stopButton3.addEventListener('click', () => stopRecording(3));
+        // 3번 녹음 들어보기 버튼 클릭 시 호출되는 함수
+        playButton3.addEventListener('click', () => playRecording(3));
+        // 3번 녹음 저장 버튼 클릭 시 호출되는 함수
+        saveButton3.addEventListener('click', () => saveRecording(3));
+
+        const cloneVoice = document.getElementById('cloneVoice');
+        cloneVoice.addEventListener('click', () => voiceCloning());
+
+        function createWaveBlobFromAudioData(audioDataBlob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const audioData = new Uint8Array(e.target.result);
+                    const sampleRate = 44100; // 예시로 44100을 사용합니다. 실제 샘플레이트를 사용하세요.
+                    const numChannels = 1; // 예시로 모노 채널을 사용합니다. 실제 채널 수를 사용하세요.
+                    const bitsPerSample = 16; // 16비트 샘플
+                    const blockAlign = numChannels * bitsPerSample / 8;
+                    const byteRate = sampleRate * blockAlign;
+                    const dataSize = audioData.length;
+                    const chunkSize = 36 + dataSize;
+                    const riffHeader = new ArrayBuffer(44);
+                    const view = new DataView(riffHeader);
+
+                    // "RIFF" 청크
+                    writeString(view, 0, 'RIFF');
+                    view.setUint32(4, chunkSize, true);
+                    writeString(view, 8, 'WAVE');
+
+                    // "fmt " 서브 청크
+                    writeString(view, 12, 'fmt ');
+                    view.setUint32(16, 16, true); // 서브 청크 크기: 16
+                    view.setUint16(20, 1, true); // 오디오 포맷: PCM
+                    view.setUint16(22, numChannels, true);
+                    view.setUint32(24, sampleRate, true);
+                    view.setUint32(28, byteRate, true);
+                    view.setUint16(32, blockAlign, true);
+                    view.setUint16(34, bitsPerSample, true);
+
+                    // "data" 서브 청크
+                    writeString(view, 36, 'data');
+                    view.setUint32(40, dataSize, true);
+
+                    // WAV 파일의 최종 Blob 생성
+                    const wavBlob = new Blob([view, audioData], { type: 'audio/wav' });
+                    resolve(wavBlob);
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(audioDataBlob);
+            });
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        // 녹음 시작 함수
+        async function startRecording(number) {
+            // 사용자의 마이크 접근 권한을 요청하고 스트림을 가져옴
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function (stream) {
+                    // MediaRecorder 객체 생성 및 녹음 시작
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+
+                    // 버튼 상태 변경
+                    document.getElementById(`startButton${number}`).disabled = true; // 녹음 시작 버튼 비활성화
+                    document.getElementById(`stopButton${number}`).disabled = false; // 녹음 완료 버튼 활성화
+
+                    chunks = [];
+                    // 데이터가 사용 가능할 때마다 이벤트 처리
+                    mediaRecorder.ondataavailable = function (e) {
+                        chunks.push(e.data);
+                    };
+
+                    // 녹음이 멈추면 발생하는 이벤트 처리
+                    mediaRecorder.onstop = function (e) {
+                        // 오디오 데이터를 Blob 객체로 변환
+                        const blob = new Blob(chunks, { 'type': 'audio/wav' });
+                        // Blob 객체를 URL로 변환하여 오디오 태그의 소스로 설정하여 재생
+                        const audioUrl = URL.createObjectURL(blob);
+                        const audioPlayback = document.getElementById('audioPlayback');
+                        audioPlayback.src = audioUrl;
+                        audioPlayback.style.display = 'block';
+                        document.getElementById(`playButton${number}`).disabled = false; // 재생 버튼 활성화
+                        document.getElementById(`saveButton${number}`).disabled = false; // 저장 버튼 활성화
+                    };
+                })
+                .catch(function (err) {
+                    console.log('An error occurred: ' + err);
+                });
+        }
+
+        // 녹음 완료 함수
+        function stopRecording(number) {
+            // 녹음 멈춤
+            mediaRecorder.stop();
+            mediaRecorder.ondataavailable = async (e) => {
+                chunks.push(e.data);
+
+                // Blob을 WAV 형식으로 변환
+                const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' }); // MediaRecorder의 결과물
+                const audioBlob = createWaveBlobFromAudioData(blob)
+                
+                // FormData를 사용하여 서버로 오디오 데이터 전송
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.wav');
+                console.log("파일 확인", formData);
+                
+                // 서버로 전송하고 응답 받기
+                const response = await fetch('/process-audio', {
+                    method: 'POST',
+                    body: formData,
+                });
+                // 서버 응답 처리
+                if (response.ok) {
+                    const audioUrl = URL.createObjectURL(await response.blob());
+
+                    // 잡음이 제거된 오디오를 재생할 수 있도록 설정
+                    const audioPlayback = document.getElementById('audioPlayback');
+                    audioPlayback.src = audioUrl;
+                    audioPlayback.style.display = 'block';
+                } else {
+                    // 서버에서 오류 메시지를 받아와 alert 창으로 표시
+                    const errorResponse = await response.text(); // 오류 응답을 JSON으로 파싱
+                    alert(`${errorResponse}`); // 오류 메시지를 alert로 표시
+                }
+            };
+            // 버튼 상태 변경
+            document.getElementById(`startButton${number}`).disabled = false; // 녹음 시작 버튼 활성화
+            document.getElementById(`stopButton${number}`).disabled = true; // 녹음 완료 버튼 비활성화
+            if (number == 3) {document.getElementById('cloneVoice').disabled = true;}
+        }
+
+        // 재생 함수
+        function playRecording(number) {
+            // 녹음된 오디오 재생
+            document.getElementById('audioPlayback').play();
+        }
+
+        // 저장 함수
+        function saveRecording(number) {
+            // 사용자가 입력한 회원 아이디
+            const userId = document.getElementById('userId').value;
+            // 서버에 전송할 데이터
+            const formData = new FormData();
+            formData.append('audio_data', chunks[0]); // 녹음된 오디오 데이터
+            formData.append('user_id', userId + '_' + number); // 사용자 아이디
+            // 서버에 저장 요청 보내기
+            fetch('/save', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.text())
+                .then(data => {
+                    // 서버에서 반환한 메시지를 alert 창으로 띄우기
+                    alert(data);
+                }).catch(error => {
+                    console.error('Error:', error);
+                    alert("녹음 파일을 등록하는 중 오류가 발생했습니다. 불편을 드려 정말 죄송합니다. 다시 녹음을 시도해 주세요.")
+                });
+        }
+
+        // voice clone 함수
+        function voiceCloning() {
+            // 사용자가 입력한 회원 아이디
+            const userId = document.getElementById('userId').value;
+
+            fetch('/clone', {
+                method: 'POST', // POST 요청 방식 사용
+                headers: {
+                    'Content-Type': 'application/json', // JSON 형식의 데이터를 전송합니다.
+                },
+                body: JSON.stringify({ user_id: userId }), // 백엔드가 필요로 하는 형식에 맞게 데이터를 JSON 문자열로 변환
+            }).then(response => response.text())
+                .then(data => {
+                    alert(data);
+                }).catch(error => {
+                    console.error('Error:', error);
+                    alert("시스템 처리 중 오류가 발생했습니다. 불편을 드려 정말 죄송합니다. 다시 녹음을 시도해 주세요.")
+                });
+        }
+    </script>
+</body>
+</html>
