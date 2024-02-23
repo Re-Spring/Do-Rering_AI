@@ -48,7 +48,7 @@
     <audio controls id="audioPlayback" style="display: none;"></audio>
 
     <br><br>
-    <button id="cloneVoice">목소리 클론하기</button>
+    <button id="cloneVoice" disabled>목소리 클론하기</button>
     <br><br>
     <a href="/cloneHome">첫페이지로</a>
 
@@ -228,7 +228,7 @@
             // 버튼 상태 변경
             document.getElementById(`startButton${number}`).disabled = false; // 녹음 시작 버튼 활성화
             document.getElementById(`stopButton${number}`).disabled = true; // 녹음 완료 버튼 비활성화
-            if (number == 3) {document.getElementById('cloneVoice').disabled = true;}
+            if (number == 3) {document.getElementById('cloneVoice').disabled = false;}
         }
 
         // 재생 함수

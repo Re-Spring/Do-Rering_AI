@@ -11,41 +11,40 @@ import noisereduce as nr
 import io
 from pydub import AudioSegment
 import numpy as np
+import requests
+import json
 
 app = FastAPI()
 
-@app.get('/cloneHome', response_class=HTMLResponse)
+# 실행 : uvicorn VoiceClone.voiceClone:app
+
+@app.get('/', response_class=HTMLResponse)
 async def index():
-    with open("templates/cloneHome.html", "r", encoding="utf-8") as f:
+    with open("templates/voicecloning/cloneHome.html", "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content, status_code=200)
 
 @app.get("/recording", response_class=HTMLResponse)
 async def get_regist_html(request: Request):
-    with open("templates/recording.html", "r", encoding="utf-8") as f:
+    with open("templates/voicecloning/recording.html", "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content, status_code=200)
 
 @app.get("/dubbing", response_class=HTMLResponse)
 async def get_regist_html(request: Request):
-    with open("templates/dubbing.html", "r", encoding="utf-8") as f:
+    with open("templates/voicecloning/dubbing.html", "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content, status_code=200)
 
 @app.post("/process-audio")
 async def process_audio(audio: UploadFile = File(...)):
-    print("오류 발생 위치 찾기 1")
     # 오디오 데이터 읽기
     audio_bytes = await audio.read()
-    print("오류 발생 위치 찾기 2")
     audio_stream = io.BytesIO(audio_bytes)
-    print("오류 발생 위치 찾기 3")
     
     # wav 파일인지 검증
     def verify_wav_file(file_stream):
-        print("오류 발생 위치 찾기 4")
         try:
-            print("오류 발생 위치 찾기 5")
             # WAV 파일 열기
             file_stream.seek(0)  # 스트림 포인터를 시작 위치로 리셋
             with wave.open(file_stream, 'rb') as wav_file:
@@ -96,7 +95,7 @@ async def process_audio(audio: UploadFile = File(...)):
 async def save_audio(request: Request, audio_data: bytes = File(...), user_id: str = Form(...)):
     try:
         # 받아온 사용자 ID를 파일명으로 지정하여 오디오 파일 저장
-        audio_filename = f"{user_id}_recording.wav"
+        audio_filename = f"static/voicecloning/user_voice_sample/{user_id}_recording.wav"
         with open(audio_filename, 'wb') as audio_file:
             audio_file.write(audio_data)
         
@@ -125,30 +124,54 @@ async def clone_voice(request: Request):
         print (f"An error occurred: {str(e)}")
         return HTMLResponse(content="User ID가 제공되지 않았습니다.")
 
+
+# 여기에서 API 키를 정의합니다. 일반적으로 접근하려는 서비스에서 이를 받게 됩니다. 이는 인증의 한 형태입니다.
+XI_API_KEY = "445ae443b70fb2f8d2f5e0e832419858"
+# GET 요청을 보낼 API 엔드포인트의 URL입니다.
+url = "https://api.elevenlabs.io/v1/voices"
+# HTTP 요청에 대한 헤더가 설정됩니다.
+# 헤더는 요청에 대한 메타데이터를 제공합니다. 이 경우, 내용 유형을 지정하고 인증을 위해 API 키를 포함하고 있습니다.
+headers = {
+"Accept": "application/json",
+"xi-api-key": XI_API_KEY,
+"Content-Type": "application/json"
+}
+# URL과 헤더를 전달하여 API 엔드포인트에 GET 요청을 보냅니다.
+response = requests.get(url, headers=headers)
+# 'requests' 라이브러리의 내장 .json() 메소드를 사용하여 API로부터의 JSON 응답을 파싱합니다.
+# 이는 JSON 데이터를 추가 처리를 위한 파이썬 딕셔너리로 변환합니다.
+data = response.json()
+# 'category'가 'cloned'인 요소만 추출
+cloned_voices = [voice for voice in data["voices"] if voice["category"] == "cloned"]
+
+
 @app.post('/generate')
 async def generate_audio(request: Request):
     # 클라이언트로부터 텍스트 데이터 받기
     data = await request.json()
     story_text = data.get('storyText', '')
-    user_id = data.get('userId', '')    
+    user_id = data.get('userId', '')
+    user_voice_id = next((voice["voice_id"] for voice in cloned_voices if voice["name"] == user_id), None)
+
+    if user_voice_id is None:
+        # 사용자 ID가 잘못되었을 경우 오류 메시지 반환
+        raise HTTPException(status_code=400)
 
     # 텍스트를 음성으로 변환
     audio = generate(
         api_key="445ae443b70fb2f8d2f5e0e832419858",
         text=story_text,
-        voice=user_id,
+        voice=user_voice_id,
         model="eleven_multilingual_v2"
     )
-
-    print(audio)
-
+    
     # 생성된 오디오 파일 저장
-    output_filename = f"{user_id}_generated_audio.wav"
+    output_filename = f"static/voicecloning/user_dubbing/{user_id}_generated_audio.wav"
     with open(output_filename, 'wb') as audio_file:
         audio_file.write(audio)
 
     # 저장된 파일을 클라이언트에게 반환
     return FileResponse(output_filename, filename=output_filename)
 
-if __name__ == '__clone__':
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+if __name__ == '__voiceClone__':
+    uvicorn.run(app, host="127.0.0.1", port=8001)
