@@ -1,9 +1,6 @@
-# 
-AI-X 인공지능
-
 <div align="center">
 
-# ⚖️ Do-Rering
+# 🔥 Do-Rering
 
 </div>
 
