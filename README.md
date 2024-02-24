@@ -38,8 +38,9 @@
 
 > Backend <br/>
         <img src="https://img.shields.io/badge/Java-007396?style=flat&logo=Java&logoColor=white"/>
+	<img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=flat&logo=SpringBoot&logoColor=white"/>
 	<img src="https://img.shields.io/badge/Python-3776AB?style=flat&logo=Python&logoColor=white"/>
-        <img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=flat&logo=SpringBoot&logoColor=white"/> <br/>
+        <img src="https://img.shields.io/badge/fastAPI-009688?style=flat&logo=fastAPI&logoColor=white"/> <br/>
 	
 > Frontend <br/>
         <img src="https://img.shields.io/badge/HTML-E34F26?style=flat&logo=HTML5&logoColor=white"/>
