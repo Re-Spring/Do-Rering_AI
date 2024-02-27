@@ -34,7 +34,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="templates/LLM")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 이미지 프롬프트 리스트를 받는 스키마 정의
@@ -57,7 +57,7 @@ async def get_images(prompt: ImagePrompt):
     for i, prompt_text in enumerate(prompt.prompts):
         response = client.images.generate(
             model="dall-e-3",
-            # 이미지 생성 prompt가 더 이미지를 잘 생성하도록 만들기
+            # 이미지 생성 prompt가 더 이미지를 잘 생성하도록 만들기static/LLM
             prompt=prompt_text+"라는 내용의 동화 페이지의 장면에 어울리는 그림을 동화 그림체로 만들어줘",
             size="1024x1024",
             quality="standard",
@@ -80,7 +80,23 @@ async def get_images(prompt: ImagePrompt):
 
 # 여긴 스토리 창작 엔드포인트
 @app.post("/generate-story")
-async def generate_story():
+async def generate_stoy(request: Request):
+    # 클라이언트로부터 전송받은 JSON 데이터를 파싱합니다.
+    data = await request.json()
+
+    # 받은 데이터를 콘솔에 출력합니다.
+    # for key, value in data.items():
+    #     print(f"{key}: {value}")
+
+    title = data.get("title", "no request data")
+    character = data.get("character", "no request data")
+    # subject = data.get("subject", "no request data")
+    genre = data.get("genre", "no request data")
+    keyword = data.get("keyword", "no request data")
+    lesson = data.get("lesson", "no request data")
+    page = data.get("page", "no request data")
+    # story = data.get("story", "no requst data")
+
     api_key = API_KEY
 
     headers = {
@@ -98,11 +114,13 @@ async def generate_story():
         # role : system = GPT의 역할 [ex)너는 동화 작가야] 
         {
             
-            "role": "system", "content":"너는 동화 스토리 작가야",
-            "role": "user", "content": "동화 스토리를 작성해줘."} 
+            "role": "system", "content":"너는 동화 스토리 작가야. 내가 입력하지 않은 값은 따로 정해지지 않은 값이니 원하는대로 만들어주면 돼. 그리고 제목만 출력하고, 바로 동화 내용을 써줘",
+            "role": "user", "content": ""
+
+            } 
         ],
         "max_tokens": 3000,  # 필요에 따라 토큰 수 조정
-        "temperature": 0.7,  # 창의성 정도 조정 0.7 ~ 1
+        "temperature": 1,  # 창의성 정도 조정 0.7 ~ 1
         "n": 1,  # 생성할 완료 항목 수
     }
 

@@ -5,7 +5,14 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("버튼 눌렀어용");
     e.preventDefault(); // 폼의 기본 제출 동작을 막습니다. 즉, 페이지가 새로고침되지 않습니다.
 
+    // 폼 데이터를 기반으로 FormData 객체를 생성합니다.
+    var formData = new FormData(e.target); // e.target은 이벤트가 발생한 폼을 가리킵니다.
     var story = {};
+
+    // FormData의 각 항목을 순회하며 storyData 객체에 추가합니다.
+    for (var pair of formData.entries()) {
+      story[pair[0]] = pair[1];
+    }
 
     // "/generate-story" 경로로 POST 요청을 보냅니다. 이는 서버에 이야기를 생성하도록 요청하는 것입니다.
     fetch("/generate-story", {
@@ -13,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
       headers: {
         "Content-Type": "application/json", // 요청의 컨텐츠 타입을 JSON으로 지정합니다.
       },
+      body: JSON.stringify(story), // 폼 데이터를 포함한 객체를 JSON 문자열로 변환
     })
       .then(console.log("fetch 나옴"))
       .then((response) => response.json()) // 응답을 JSON 형태로 변환합니다.
@@ -74,4 +82,16 @@ function makePictures(story) {
   } else {
     console.log("story 없음");
   }
+}
+
+function chknum() {
+  var inputElement = document.getElementById("page");
+  var value = inputElement.value;
+
+  if (value < 6 || value > 9) {
+    alert("6~9에 해당하는 값만 입력해주세요.");
+    inputElement.value = ""; // 입력 필드를 비웁니다.
+    return false;
+  }
+  return true;
 }
