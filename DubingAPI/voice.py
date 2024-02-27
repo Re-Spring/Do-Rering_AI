@@ -1,8 +1,18 @@
+####### lib 설치 ##########
+# pip install openai
+# pip install streamlit
+###########################
+# 실행 : streamlit run voice.py
+###########################
+# 원하는 스크립트를 성우를 선택해서 읽도록 만들어줌
+###########################
+
 import os
 import streamlit as st
 from openai import OpenAI
 import openai
 from dotenv import load_dotenv
+from datetime import datetime
 
 # .env 파일 로드
 load_dotenv()
@@ -15,11 +25,7 @@ client = OpenAI(
 
 st.title("OpenAI's Text-to-Audio Response")
 
-# 달리가 생성한 이미지를 사용. prompt: 귀여운 인공지능 성우 로봇 그려줘
-# st.image("https://wikidocs.net/images/page/215361/%EC%9D%B8%EA%B3%B5%EC%A7%80%EB%8A%A5%EC%84%B1%EC%9A%B0.jpg", width=200)
-
 # 인공지능 성우 선택 박스를 생성.
-# 공식 문서 참고: https://platform.openai.com/docs/guides/text-to-speech
 options = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
 selected_option = st.selectbox("성우를 선택하세요:", options)
 
@@ -29,7 +35,6 @@ user_prompt = st.text_area("인공지능 성우가 읽을 스크립트를 입력
 
 # Generate Audio 버튼을 클릭하면 True가 되면서 if문 실행.
 if st.button("Generate Audio"):
-
     # 텍스트로부터 음성을 생성.
     audio_response = client.audio.speech.create(
         model="tts-1",
@@ -37,11 +42,14 @@ if st.button("Generate Audio"):
         input=user_prompt,
     )
 
-    # 음성을 mp3 파일로 저장. 코드가 있는 경로에 파일이 생성된다.
-    audio_content = audio_response.content
+    # 현재 날짜와 시간을 이용하여 파일 이름 생성
+    current_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    audio_file_path = f"static/DubingAPI_audio/{current_datetime}.mp3"
 
-    with open("temp_audio.mp3", "wb") as audio_file:
+    # 음성 파일을 저장.
+    audio_content = audio_response.content
+    with open(audio_file_path, "wb") as audio_file:
         audio_file.write(audio_content)
 
     # mp3 파일을 재생.
-    st.audio("temp_audio.mp3", format="audio/mp3")
+    st.audio(audio_file_path, format="audio/mp3")
