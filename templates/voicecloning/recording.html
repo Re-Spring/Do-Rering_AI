@@ -50,7 +50,7 @@
     <br><br>
     <button id="cloneVoice" disabled>목소리 클론하기</button>
     <br><br>
-    <a href="/cloneHome">첫페이지로</a>
+    <a href="/">첫페이지로</a>
 
     <script>
         // 1번 녹음 버튼과 관련된 요소들
@@ -199,7 +199,7 @@
 
                 // Blob을 WAV 형식으로 변환
                 const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' }); // MediaRecorder의 결과물
-                const audioBlob = createWaveBlobFromAudioData(blob)
+                const audioBlob = await createWaveBlobFromAudioData(blob)
                 
                 // FormData를 사용하여 서버로 오디오 데이터 전송
                 const formData = new FormData();

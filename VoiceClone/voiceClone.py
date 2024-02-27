@@ -16,6 +16,9 @@ import json
 
 app = FastAPI()
 
+# API_KEY = os.environ.get("ELEVEN_API_KEY")
+API_KEY = "445ae443b70fb2f8d2f5e0e832419858"
+
 # 실행 : uvicorn VoiceClone.voiceClone:app
 
 @app.get('/', response_class=HTMLResponse)
@@ -105,35 +108,14 @@ async def save_audio(request: Request, audio_data: bytes = File(...), user_id: s
         print(f"An error occurred: {str(e)}")
         return HTMLResponse(content="녹음 파일을 등록하는 중 오류가 발생했습니다. 불편을 드려 정말 죄송합니다. 다시 녹음을 시도해 주세요.")
 
-@app.post('/clone')
-async def clone_voice(request: Request):
-    body = await request.json()  # 요청에서 JSON 본문 추출
 
-    user_id = body.get('user_id')
-
-    try:
-        # Voice clone 생성
-        voice = clone(
-            api_key="445ae443b70fb2f8d2f5e0e832419858",
-            name=user_id,
-            description="Read fairy tales in a friendly and cheerful way.",
-            files=[f"{user_id}_1_recording.wav", f"{user_id}_2_recording.wav", f"{user_id}_3_recording.wav"],
-        )
-        return HTMLResponse(content="Voice Clone 완료! 이제 등록된 목소리로 동화를 더빙해 보세요!")
-    except Exception as e:
-        print (f"An error occurred: {str(e)}")
-        return HTMLResponse(content="User ID가 제공되지 않았습니다.")
-
-
-# 여기에서 API 키를 정의합니다. 일반적으로 접근하려는 서비스에서 이를 받게 됩니다. 이는 인증의 한 형태입니다.
-XI_API_KEY = "445ae443b70fb2f8d2f5e0e832419858"
 # GET 요청을 보낼 API 엔드포인트의 URL입니다.
 url = "https://api.elevenlabs.io/v1/voices"
 # HTTP 요청에 대한 헤더가 설정됩니다.
 # 헤더는 요청에 대한 메타데이터를 제공합니다. 이 경우, 내용 유형을 지정하고 인증을 위해 API 키를 포함하고 있습니다.
 headers = {
 "Accept": "application/json",
-"xi-api-key": XI_API_KEY,
+"xi-api-key": API_KEY,
 "Content-Type": "application/json"
 }
 # URL과 헤더를 전달하여 API 엔드포인트에 GET 요청을 보냅니다.
@@ -144,6 +126,28 @@ data = response.json()
 # 'category'가 'cloned'인 요소만 추출
 cloned_voices = [voice for voice in data["voices"] if voice["category"] == "cloned"]
 
+
+@app.post('/clone')
+async def clone_voice(request: Request):
+    body = await request.json()  # 요청에서 JSON 본문 추출
+
+    user_id = body.get('user_id')
+
+    user_voice_id = next((voice["voice_id"] for voice in cloned_voices if voice["name"] == user_id), None)
+    print(user_voice_id)
+
+    try:
+        # Voice clone 생성
+        voice = clone(
+            api_key=API_KEY,
+            name=user_id,
+            description="Read fairy tales in a friendly and cheerful way.",
+            files=[f"static/voicecloning/user_voice_sample/{user_id}_1_recording.wav", f"static/voicecloning/user_voice_sample/{user_id}_2_recording.wav", f"static/voicecloning/user_voice_sample/{user_id}_3_recording.wav"],
+        )
+        return HTMLResponse(content="Voice Clone 완료! 이제 등록된 목소리로 동화를 더빙해 보세요!")
+    except Exception as e:
+        print (f"An error occurred: {str(e)}")
+        return HTMLResponse(content="User ID가 제공되지 않았습니다.")
 
 @app.post('/generate')
 async def generate_audio(request: Request):
@@ -159,7 +163,7 @@ async def generate_audio(request: Request):
 
     # 텍스트를 음성으로 변환
     audio = generate(
-        api_key="445ae443b70fb2f8d2f5e0e832419858",
+        api_key=API_KEY,
         text=story_text,
         voice=user_voice_id,
         model="eleven_multilingual_v2"
