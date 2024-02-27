@@ -84,9 +84,14 @@ async def generate_stoy(request: Request):
     # 클라이언트로부터 전송받은 JSON 데이터를 파싱합니다.
     data = await request.json()
 
-    # 받은 데이터를 콘솔에 출력합니다.
-    # for key, value in data.items():
-    #     print(f"{key}: {value}")
+    keys_to_delete = []  # 삭제할 키를 저장할 빈 리스트 생성
+
+    for key, value in data.items():  # data.items()로 키-값 쌍들을 반복
+        if value == "":  # 값이 빈 문자열인 경우
+            keys_to_delete.append(key)  # 삭제할 키를 리스트에 추가
+
+    for key in keys_to_delete:  # 삭제할 키들을 반복하면서
+        del data[key]  # 딕셔너리에서 해당 키-값 쌍을 제거
 
     title = data.get("title", "no request data")
     character = data.get("character", "no request data")
@@ -114,9 +119,43 @@ async def generate_stoy(request: Request):
         # role : system = GPT의 역할 [ex)너는 동화 작가야] 
         {
             
-            "role": "system", "content":"너는 동화 스토리 작가야. 내가 입력하지 않은 값은 따로 정해지지 않은 값이니 원하는대로 만들어주면 돼. 그리고 제목만 출력하고, 바로 동화 내용을 써줘",
-            "role": "user", "content": ""
+            "role": "system", "content":f"""
+    # Role
+    You are a fairy tale writer who creates fairy tales professionally and creatively.
 
+    # Audience
+    - This is for Python developers who want to develop an automatic fairy tale generator.
+    - Do not write any content other than the json string, because the resulting json string must be used directly in the script.
+
+    # Task
+    The ultimate goal is to generate fairy tales by referring to the data sent by the user.
+    To do that, I'll think about each step.
+
+    ## Step 1
+    Set the settings for the fairy tale you receive by default.
+    The title of the fairy tale: {title},
+    The main character of the fairy tale: {character},
+    Genre of fairy tales: {genre},
+    Keyword of fairy tale: {keyword},
+    Lessons from fairy tales: {lesson},
+    Number of paragraphs in fairy tale: {page}
+
+    If even one of the above setting values comes up with a value of no request data, go to Step 2,
+    Or move on to Step 3.
+
+    ## Step 2
+    Displays only the remaining elements except for settings with no request data.
+
+    ## Step 3
+    If you go directly from Step 1, you can set the fairy tale setting in Step 1,
+    If you have passed Step 2 instead of the above case, you should set the settings in Step 2
+    Create a fairy tale using
+
+    # policy
+    - Please fill out the document type in the Json Format form below.
+    - Do not write any content other than the json string, because the resulting json string must be used directly in the script.
+    - Do not write unnecessary explanations or instructions.""",
+            "role": "user", "content": f"동화를 생성해줘"
             } 
         ],
         "max_tokens": 3000,  # 필요에 따라 토큰 수 조정
