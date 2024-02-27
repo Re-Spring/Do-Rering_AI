@@ -1,9 +1,9 @@
 ---
-name: Bug report
+name: "[BE] [BUG] 업무명 "
 about: Create a report to help us improve
-title: ''
+title: "[BE] [BUG] 업무명 "
 labels: ''
-assignees: ''
+assignees: ezzzzdev, 08166, jiyeong08, RufusVein, bockson
 
 ---
 
