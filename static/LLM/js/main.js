@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
           // console.log("value값 : ", story[key]);
         });
         console.log("story : " + story);
-        makePictures(story);
+        // makePictures(story);
         console.log(Object.keys(story).length);
       })
       .catch((error) => console.error("Error:", error)); // 오류가 발생하면 콘솔에 에러를 기록합니다.
@@ -46,6 +46,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function makePictures(story) {
+  console.log("makePictures story");
   console.log(story);
   var input_text = story;
   // console.log("input_text : " + input_text);
