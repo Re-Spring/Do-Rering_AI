@@ -35,8 +35,10 @@ stability_api = client.StabilityInference(
     engine="stable-diffusion-xl-1024-v1-0",
 )
 
+
 # 이미지 생성 및 저장 경로 설정
-image_save_folder = r'C:\Users\USER\openai_ex\images'
+## 폴더 있음?
+image_save_folder = 'C:/Users/USER/openai_ex/images'
 
 # 이미지 생성
 answers = stability_api.generate(
@@ -57,7 +59,7 @@ for i, resp in enumerate(answers):
             img = Image.open(io.BytesIO(artifact.binary))
             # 이미지 저장 경로에 파일 이름 포함
             img_save_path = os.path.join(image_save_folder, f"generated_image_{i+1}.png")
-            img.save(img_save_path)
+            img.save(img_save_path.replace("\\","/"))
             print(f"Image saved to {img_save_path}")  # 저장된 이미지 경로 출력
 # Set up our connection to the API.
 stability_api = client.StabilityInference(
@@ -72,19 +74,13 @@ stability_api = client.StabilityInference(
 # Set up our initial generation parameters.
 answers = stability_api.generate(
     prompt="draw fantasy woman elf",
-    seed=4253978046, # If a seed is provided, the resulting generated image will be deterministic.
-                     # What this means is that as long as all generation parameters remain the same, you can always recall the same image simply by generating it again.
-                     # Note: This isn't quite the case for Clip Guided generations, which we'll tackle in a future example notebook.
-    steps=50, # Amount of inference steps performed on image generation. Defaults to 30.
-    cfg_scale=8.0, # Influences how strongly your generation is guided to match your prompt.
-                   # Setting this value higher increases the strength in which it tries to match your prompt.
-                   # Defaults to 7.0 if not specified.
-    width=1024, # Generation width, defaults to 512 if not included.
-    height=1024, # Generation height, defaults to 512 if not included.
-    samples=1, # Number of images to generate, defaults to 1 if not included.
-    sampler=generation.SAMPLER_K_DPMPP_2M # Choose which sampler we want to denoise our generation with.
-                                                 # Defaults to k_dpmpp_2m if not specified. Clip Guidance only supports ancestral samplers.
-                                                 # (Available Samplers: ddim, plms, k_euler, k_euler_ancestral, k_heun, k_dpm_2, k_dpm_2_ancestral, k_dpmpp_2s_ancestral, k_lms, k_dpmpp_2m, k_dpmpp_sde)
+    seed=4253978046, 
+    steps=50, 
+    cfg_scale=8.0, 
+    width=1024,
+    height=1024,
+    samples=1,
+    sampler=generation.SAMPLER_K_DPMPP_2M
 )
 
 # Loop through the responses and save each image with a unique filename
@@ -98,7 +94,7 @@ for i, resp in enumerate(answers):
 
 
 # 이미지 파일이 저장된 폴더 지정
-image_folder = r'C:\Users\USER\openai_ex\images'
+image_folder = 'C:/Users/USER/openai_ex/images'
 # 지정된 폴더에서 모든 이미지 파일 목록 불러오기 (예: PNG 형식)
 image_files = sorted(glob.glob(os.path.join(image_folder, '*.png')))
 
