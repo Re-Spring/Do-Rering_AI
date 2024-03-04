@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 from PIL import Image
 from pydantic import BaseModel
@@ -8,12 +9,12 @@ from dotenv import load_dotenv
 import os
 import io
 import base64
-from fastapi.staticfiles import StaticFiles
 import httpx
 from fastapi.middleware.cors import CORSMiddleware
 # from typing import List
 from typing import Dict
 from pydantic import BaseModel
+
 
 load_dotenv()
 
@@ -58,6 +59,7 @@ async def get_images(prompt: ImagePrompt):
         response = client.images.generate(
             model="dall-e-3",
             # 이미지 생성 prompt가 더 이미지를 잘 생성하도록 만들기static/LLM
+            ## Message로 변경하여 Step by Step으로 변경
             prompt=prompt_text+"라는 내용의 동화 페이지의 장면에 어울리는 그림을 동화 그림체로 만들어줘",
             size="1024x1024",
             quality="standard",
@@ -77,7 +79,7 @@ async def get_images(prompt: ImagePrompt):
 
 # 여긴 스토리 창작 엔드포인트
 @app.post("/generate-story")
-async def generate_stoy(request: Request):
+async def generate_story(request: Request):
     # 클라이언트로부터 전송받은 JSON 데이터를 파싱합니다.
     data = await request.json()
 
@@ -211,7 +213,7 @@ In the process of generating the fairy tale, please move to Step 3 on the condit
                 ## Please print out the title on the first line
 """
                 
-            } 
+            }
         ],
         "max_tokens": 3000,  # 필요에 따라 토큰 수 조정
         "temperature": 1,  # 창의성 정도 조정 0.7 ~ 1

@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // FormData의 각 항목을 순회하며 storyData 객체에 추가합니다.
     for (var pair of formData.entries()) {
       story[pair[0]] = pair[1];
+      console.log(story[pair[0]]);
     }
 
     // "/generate-story" 경로로 POST 요청을 보냅니다. 이는 서버에 이야기를 생성하도록 요청하는 것입니다.
