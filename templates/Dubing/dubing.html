@@ -1,63 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Text to Audio Dubbing</title>
-</head>
-<body>
+  </head>
+  <body>
     <h1>OpenAI's Text-to-Audio Response</h1>
     <form id="audio_form">
-        <label for="voice">성우를 선택하세요:</label>
-        <select name="voice" id="voice">
-            <option value="alloy">alloy</option>
-            <option value="echo">echo</option>
-            <option value="fable">fable</option>
-            <option value="onyx">onyx</option>
-            <option value="nova">nova</option>
-            <option value="shimmer">shimmer</option>
-        </select>
-        <br>
-        <label for="script">인공지능 성우가 읽을 스크립트를 입력해주세요:</label>
-        <textarea name="script" id="script" rows="4" cols="50" required>오늘은 생활의 꿀팁을 알아보겠습니다.</textarea>
-        <br>
-        <button type="button" onclick="generateAudio()">생성</button>
+      <label for="voice">성우를 선택하세요:</label>
+      <select name="voice" id="voice">
+        <option value="alloy">alloy</option>
+        <option value="echo">echo</option>
+        <option value="fable">fable</option>
+        <option value="onyx">onyx</option>
+        <option value="nova">nova</option>
+        <option value="shimmer">shimmer</option>
+      </select>
+      <br />
+      <label for="script">인공지능 성우가 읽을 스크립트를 입력해주세요:</label>
+      <textarea name="script" id="script" rows="4" cols="50" required>
+현진이는 매우매우 바보다</textarea
+      >
+      <br />
+      <button type="button" onclick="generateAudio()">생성</button>
     </form>
 
     <!-- 음성 파일 미리 듣기를 위한 audio 태그 -->
-    <audio id="audio_player" controls style="display: none;"></audio>
+    <audio id="audio_player" controls style="display: none"></audio>
 
     <script>
-        function generateAudio() {
-            var form = document.getElementById('audio_form');
-            var formData = new FormData(form);
+      function generateAudio() {
+        var form = document.getElementById("audio_form");
+        var formData = new FormData(form);
 
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/generate-audio/', true);
-            xhr.responseType = 'json';
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/generate-audio/", true);
+        xhr.responseType = "json";
 
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    var audioUrl = xhr.response.audio_url;
-                    playAudio(audioUrl);
-                } else {
-                    alert('Error occurred while generating audio.');
-                }
-            };
+        xhr.onload = function () {
+          if (xhr.status === 200) {
+            var audioUrl = xhr.response.audio_url;
+            playAudio(audioUrl);
+          } else {
+            alert("Error occurred while generating audio.");
+          }
+        };
 
-            xhr.onerror = function() {
-                alert('Error occurred while generating audio.');
-            };
+        xhr.onerror = function () {
+          alert("Error occurred while generating audio.");
+        };
 
-            xhr.send(formData);
-        }
+        xhr.send(formData);
+      }
 
-        function playAudio(audioUrl) {
-            var audioPlayer = document.getElementById('audio_player');
-            audioPlayer.src = audioUrl;
-            audioPlayer.style.display = 'block';
-            audioPlayer.play();
-        }
+      function playAudio(audioUrl) {
+        var audioPlayer = document.getElementById("audio_player");
+        audioPlayer.src = audioUrl;
+        audioPlayer.style.display = "block";
+        audioPlayer.play();
+      }
     </script>
-</body>
+  </body>
 </html>

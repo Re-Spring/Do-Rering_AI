@@ -1,6 +1,5 @@
 # 모듈을 사용할 엔드포인트
-
-import os
+import os, sys
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request
@@ -9,15 +8,16 @@ from openai import OpenAI
 from LLM_module import LLM_module
 import json
 
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+import VoiceClone, T2I, DubingAPI
+from VoiceClone.Dubbing import  dubbing_module
+from VoiceClone.VoiceCloning import voiceCloning_module
+from DubingAPI import voice_module
+
 # prompt key값
-
 load_dotenv()
-
 API_KEY = os.environ.get("OPENAI_API_KEY")
-
-client = OpenAI(
-    api_key = API_KEY
-)
+client = OpenAI(api_key = API_KEY)
 
 # 기본 환경설정
 app = FastAPI()
@@ -48,7 +48,5 @@ async def generate_story_endpoint(request: Request):
     page1 = story_data["paragraph1"]
     print(page1)
 
-    
     return story
-
     # return await llm_module.generate_story(request)

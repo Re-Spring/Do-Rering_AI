@@ -37,10 +37,7 @@ class T2I_generator :
             # # (Available Samplers: ddim, plms, k_euler, k_euler_ancestral, k_heun, k_dpm_2, k_dpm_2_ancestral, k_dpmpp_2s_ancestral, k_lms, k_dpmpp_2m, k_dpmpp_sde)
         )
 
-
-
         for resp in answers:
-            print(resp)
             for artifact in resp.artifacts:
                 if artifact.finish_reason == generation.FILTER:
                     # 요청하신 API의 안전 필터가 활성화되어 처리할 수 없습니다. 프롬프트를 수정하고 다시 시도해주세요.
@@ -50,3 +47,5 @@ class T2I_generator :
                 if artifact.type == generation.ARTIFACT_IMAGE:
                     img = Image.open(io.BytesIO(artifact.binary))
                     img.save("panda3" + ".png")
+
+T2I_generator.T2I_generator()
