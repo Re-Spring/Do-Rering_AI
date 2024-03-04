@@ -42,8 +42,7 @@ class T2I_generator :
             # 지정하지 않은 경우 기본값은 k_dpmpp_2m입니다. 클립 안내는 조상 샘플러만 지원합니다.
             # # (Available Samplers: ddim, plms, k_euler, k_euler_ancestral, k_heun, k_dpm_2, k_dpm_2_ancestral, k_dpmpp_2s_ancestral, k_lms, k_dpmpp_2m, k_dpmpp_sde)
         )
-        print(prompt)
-        print(seed_number)
+
         for resp in answers:
             for artifact in resp.artifacts:
                 if artifact.finish_reason == generation.FILTER:

@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
 from elevenlabs.client import ElevenLabs
+import requests
+from elevenlabs import generate
 
 router = APIRouter()
 
@@ -16,6 +18,7 @@ headers = {
 "xi-api-key": API_KEY,
 "Content-Type": "application/json"
 }
+
 # URL과 헤더를 전달하여 API 엔드포인트에 GET 요청을 보냅니다.
 response = requests.get(url, headers=headers)
 # 'requests' 라이브러리의 내장 .json() 메소드를 사용하여 API로부터의 JSON 응답을 파싱합니다.
