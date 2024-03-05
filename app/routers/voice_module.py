@@ -10,7 +10,7 @@ class VoiceSynthesizer:
         load_dotenv(dotenv_path)
         self.api_key = os.environ.get("OPENAI_API_KEY")
         self.client = OpenAI(api_key=self.api_key)
-        self.audio_files_directory = "../static/DubingVoice/audio_files"
+        self.audio_files_directory = "../static/dubing/audio_files"
         os.makedirs(self.audio_files_directory, exist_ok=True)
 
     def generate_audio_file(self, voice: str, script: str):

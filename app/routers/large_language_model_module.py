@@ -1,4 +1,4 @@
-# 여기가 LLM prompt 처리하는 모듈 파트
+# 여기가 large_language_model prompt 처리하는 모듈 파트
 
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse

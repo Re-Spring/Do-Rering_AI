@@ -5,14 +5,10 @@ from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request
 from dotenv import load_dotenv
 from openai import OpenAI
-from LLM_module import LLM_module
 import json
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-import VoiceClone, T2I, DubingAPI
-from VoiceClone.Dubbing import  dubbing_module
-from VoiceClone.VoiceCloning import voiceCloning_module
-from DubingAPI import voice_module
+from app.routers.large_language_model_module import LLM_module
 
 # prompt key값
 load_dotenv()
@@ -22,10 +18,13 @@ client = OpenAI(api_key = API_KEY)
 # 기본 환경설정
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="../static"), name="static")
-templates = Jinja2Templates(directory="../templates/LLM")
+templates = Jinja2Templates(directory="../templates/large_language_model")
 
 # 인스턴스
 llm_module = LLM_module(api_key=API_KEY)
+
+# dubbing = Dubbing_VoiceCloning(api_key=API_KEY)
+
 
 # 엔드 포인트
 @app.get("/")

@@ -108,23 +108,23 @@ def test_print(audio_folder, image_folder, font_path, output_video_path) :
     print("output_video_path", output_video_path)
 
 # 환경 설정 및 실행 코드
-# font_path = 'static/T2I/font/Pretendard-Black.ttf'
-# audio_folder = "static/T2I/audio_files"
-# image_folder = 'static/T2I/generated_images'
-# output_video_path = 'static/T2I/StoryMovie.mp4'
+# font_path = 'static/text_to_image/font/Pretendard-Black.ttf'
+# audio_folder = "static/text_to_image/audio_files"
+# image_folder = 'static/text_to_image/generated_images'
+# output_video_path = 'static/text_to_image/StoryMovie.mp4'
     
 # 현재 스크립트 파일의 절대 경로를 가져옵니다.
-script_dir = os.path.dirname(os.path.abspath(__file__)).replace("T2I","")
-audio_folder = os.path.join(script_dir, "static", "T2I", "audio_files").replace("\\","/")
-image_folder = os.path.join(script_dir, "static", "T2I", "generated_images").replace("\\","/")
-font_path = os.path.join(script_dir, "static", "T2I", "font", "Pretendard-Black.ttf").replace("\\","/")
-output_video_path = os.path.join(script_dir, "static", "T2I", "StoryMovie.mp4").replace("\\","/")
+script_dir = os.path.dirname(os.path.abspath(__file__)).replace("text_to_image","")
+audio_folder = os.path.join(script_dir, "static", "text_to_image", "audio_files").replace("\\","/")
+image_folder = os.path.join(script_dir, "static", "text_to_image", "generated_images").replace("\\","/")
+font_path = os.path.join(script_dir, "static", "text_to_image", "font", "Pretendard-Black.ttf").replace("\\","/")
+output_video_path = os.path.join(script_dir, "static", "text_to_image", "StoryMovie.mp4").replace("\\","/")
 
 # 사용 예시
-image_path = 'static/T2I/generated_images'
+image_path = 'static/text_to_image/generated_images'
 text = "옛날 옛적, 작은 마을 가장자리에 위치한 신비한 숲이 있었습니다. 이 숲은 새들이 노래하는 소리와 나무들이 춤추는 모습으로 가득 차 있었지요. 하지만 마을 사람들은 숲이 너무 깊고 미로 같아서 아무도 그 안으로 깊숙이 들어가 보지 못했습니다. 숲에는 무슨 비밀이 숨겨져 있는지, 아이들은 항상 궁금해했습니다."
 position = (50, 50)  # 텍스트를 추가할 위치
-# font_path = 'static/T2I/font/Pretendard-Black.ttf'  # 한글을 지원하는 폰트 파일 경로
+# font_path = 'static/text_to_image/font/Pretendard-Black.ttf'  # 한글을 지원하는 폰트 파일 경로
 font_size = 24
 color = (255, 255, 255)  # 텍스트 색상, 여기서는 흰색
 

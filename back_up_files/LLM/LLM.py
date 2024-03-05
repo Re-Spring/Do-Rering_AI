@@ -35,7 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-templates = Jinja2Templates(directory="templates/LLM")
+templates = Jinja2Templates(directory="templates/large_language_model")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 이미지 프롬프트 리스트를 받는 스키마 정의
@@ -52,13 +52,13 @@ def home(request: Request):
 @app.post("/mkimg")
 async def get_images(prompt: ImagePrompt):
     print("get_image 들어옴")
-    image_paths = []
 
+    image_paths = []
     # 각 프롬프트에 대해 이미지 생성 및 경로 저장
     for i, prompt_text in enumerate(prompt.prompts):
         response = client.images.generate(
             model="dall-e-3",
-            # 이미지 생성 prompt가 더 이미지를 잘 생성하도록 만들기static/LLM
+            # 이미지 생성 prompt가 더 이미지를 잘 생성하도록 만들기static/large_language_model
             ## Message로 변경하여 Step by Step으로 변경
             prompt=prompt_text+"라는 내용의 동화 페이지의 장면에 어울리는 그림을 동화 그림체로 만들어줘",
             size="1024x1024",
@@ -68,7 +68,7 @@ async def get_images(prompt: ImagePrompt):
         )
         image_data = base64.b64decode(response.data[0].b64_json)
         image = Image.open(io.BytesIO(image_data))
-        image_path = f'static/LLM/images/output_{i}.png'
+        image_path = f'static/large_language_model/images/output_{i}.png'
         image.save(image_path)
         image_paths.append(image_path)
 
@@ -229,6 +229,7 @@ In the process of generating the fairy tale, please move to Step 3 on the condit
             raise HTTPException(status_code=response.status_code, detail=response.text)
 
         result = response.json()
+
         print("result")
         print(result)
         # if 'choices' in result and 'text' in result['choices']:
@@ -240,8 +241,7 @@ In the process of generating the fairy tale, please move to Step 3 on the condit
         choice = result['choices'][0]  # 첫 번째 선택지를 가져옵니다.
         print("choices")
         print(choice)
-   
-        # print(result)
+
         # 'message' 객체 내의 'content' 필드에서 생성된 텍스트를 추출합니다.
         if 'message' in choice and 'content' in choice['message']:
             story_text = choice['message']['content'].strip()
