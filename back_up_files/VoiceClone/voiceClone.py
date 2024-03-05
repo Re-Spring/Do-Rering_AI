@@ -23,19 +23,19 @@ API_KEY = "445ae443b70fb2f8d2f5e0e832419858"
 
 @app.get('/', response_class=HTMLResponse)
 async def index():
-    with open("templates/voicecloning/cloneHome.html", "r", encoding="utf-8") as f:
+    with open("templates/voice_cloning/cloneHome.html", "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content, status_code=200)
 
 @app.get("/recording", response_class=HTMLResponse)
 async def get_regist_html(request: Request):
-    with open("templates/voicecloning/recording.html", "r", encoding="utf-8") as f:
+    with open("templates/voice_cloning/recording.html", "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content, status_code=200)
 
 @app.get("/dubbing", response_class=HTMLResponse)
 async def get_regist_html(request: Request):
-    with open("templates/voicecloning/dubbing.html", "r", encoding="utf-8") as f:
+    with open("templates/voice_cloning/dubbing.html", "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content, status_code=200)
 
@@ -98,7 +98,7 @@ async def process_audio(audio: UploadFile = File(...)):
 async def save_audio(request: Request, audio_data: bytes = File(...), user_id: str = Form(...)):
     try:
         # 받아온 사용자 ID를 파일명으로 지정하여 오디오 파일 저장
-        audio_filename = f"static/voicecloning/user_voice_sample/{user_id}_recording.wav"
+        audio_filename = f"static/voice_cloning/user_voice_sample/{user_id}_recording.wav"
         with open(audio_filename, 'wb') as audio_file:
             audio_file.write(audio_data)
         
@@ -142,7 +142,7 @@ async def clone_voice(request: Request):
             api_key=API_KEY,
             name=user_id,
             description="Read fairy tales in a friendly and cheerful way.",
-            files=[f"static/voicecloning/user_voice_sample/{user_id}_1_recording.wav", f"static/voicecloning/user_voice_sample/{user_id}_2_recording.wav", f"static/voicecloning/user_voice_sample/{user_id}_3_recording.wav"],
+            files=[f"static/voice_cloning/user_voice_sample/{user_id}_1_recording.wav", f"static/voice_cloning/user_voice_sample/{user_id}_2_recording.wav", f"static/voice_cloning/user_voice_sample/{user_id}_3_recording.wav"],
         )
         return HTMLResponse(content="Voice Clone 완료! 이제 등록된 목소리로 동화를 더빙해 보세요!")
     except Exception as e:
@@ -170,7 +170,7 @@ async def generate_audio(request: Request):
     )
     
     # 생성된 오디오 파일 저장
-    output_filename = f"static/voicecloning/user_dubbing/{user_id}_generated_audio.wav"
+    output_filename = f"static/voice_cloning/user_dubbing/{user_id}_generated_audio.wav"
     with open(output_filename, 'wb') as audio_file:
         audio_file.write(audio)
 

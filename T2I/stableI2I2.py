@@ -8,10 +8,10 @@ import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
 import sys
 sys.path.append('..')
 
-# T2I.stableT2I 모듈에서 T2I_generator 클래스와 stability_api 인스턴스를 임포트
+# text_to_image.stableT2I 모듈에서 T2I_generator 클래스와 stability_api 인스턴스를 임포트
 from T2I.stableT2I import T2I_generator, stability_api
 
-# T2I 생성을 통해 이미지와 시드 값을 얻습니다.
+# text_to_image 생성을 통해 이미지와 시드 값을 얻습니다.
 t2i_image, t2i_seed = T2I_generator.generator_image("A magical forest with unicorns and fairies")  # 메서드 이름 수정
 
 if t2i_image is not None and t2i_seed is not None:
@@ -34,7 +34,7 @@ if t2i_image is not None and t2i_seed is not None:
             if artifact.type == generation.ARTIFACT_IMAGE:
                 img2 = Image.open(io.BytesIO(artifact.binary))
                 # 이미지 저장 경로 설정
-                image_dir = Path(__file__).resolve().parent.parent / "static/T2I/images"
+                image_dir = Path(__file__).resolve().parent.parent / "static/text_to_image/images"
                 image_dir.mkdir(parents=True, exist_ok=True)
 
                 # UUID를 이용하여 이미지 파일명 설정

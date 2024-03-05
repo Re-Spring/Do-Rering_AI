@@ -13,8 +13,8 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def get_form(request: Request):
-    # T2I/dalle.html 템플릿을 렌더링하여 반환
-    return templates.TemplateResponse("T2I/dalle.html", {"request": request})
+    # text_to_image/dalle.html 템플릿을 렌더링하여 반환
+    return templates.TemplateResponse("text_to_image/dalle.html", {"request": request})
 
 @app.post("/generate-image", response_class=HTMLResponse)
 async def generate_image(request: Request, prompt: str = Form(...)):

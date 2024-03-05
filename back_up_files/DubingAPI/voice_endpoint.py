@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
-from voice_module import VoiceSynthesizer
+from app.routers.voice_module import VoiceSynthesizer
 import os
 
 app = FastAPI()

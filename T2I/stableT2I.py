@@ -52,7 +52,7 @@ class T2I_generator :
                     img = Image.open(io.BytesIO(artifact.binary))
 
                     # # 이미지 저장 경로 설정
-                    # image_dir = Path(__file__).resolve().parent.parent / "static/T2I/images"  # 이미지 저장 경로 설정
+                    # image_dir = Path(__file__).resolve().parent.parent / "static/text_to_image/images"  # 이미지 저장 경로 설정
                     # image_dir.mkdir(parents=True, exist_ok=True)  # 해당 경로가 없다면 생성합니다.
                     #
                     # #UUID를 이용하여 이미지 파일명 설정

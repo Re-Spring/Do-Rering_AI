@@ -3,7 +3,7 @@ from elevenlabs.client import ElevenLabs
 import requests
 from elevenlabs import generate
 
-class VoiceCloning:
+class Dubbing_VoiceCloning:
     def __init__(self, api_key):
         self.api_key = api_key
         self.url = "https://api.elevenlabs.io/v1/voices"

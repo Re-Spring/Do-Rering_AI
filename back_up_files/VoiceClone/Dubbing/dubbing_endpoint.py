@@ -1,13 +1,12 @@
 # main.py
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import FileResponse
-from dubbing_module import VoiceCloning
+from app.routers.dubbing_module import VoiceCloning
 from fastapi.responses import FileResponse
 from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
 voice_cloning = VoiceCloning(api_key="445ae443b70fb2f8d2f5e0e832419858")
-templates = Jinja2Templates(directory="../../templates/voicecloning")
+templates = Jinja2Templates(directory="../../templates/voice_cloning")
 
 @app.get('/')
 async def index(request : Request):
