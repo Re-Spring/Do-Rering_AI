@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
-from app.routers.voice_cloning_module import VoiceCloning
+from routers import VoiceCloning
 
 app = FastAPI()
 voice_cloning = VoiceCloning(api_key="445ae443b70fb2f8d2f5e0e832419858")

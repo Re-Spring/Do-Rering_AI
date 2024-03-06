@@ -4,9 +4,7 @@ from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 import httpx
 
-
-
-class LLM_module:
+class Large_language_model_module:
     def __init__(self, api_key):
         self.api_key = api_key
 
