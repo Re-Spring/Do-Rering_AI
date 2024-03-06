@@ -10,12 +10,12 @@ class Voice_synthesizer:
         load_dotenv(dotenv_path)
         self.api_key = os.environ.get("OPENAI_API_KEY")
         self.client = OpenAI(api_key=self.api_key)
-        self.audio_files_directory = "../static/dubing/audio_files"
+        self.audio_files_directory = "static/dubing/audio_files"
         os.makedirs(self.audio_files_directory, exist_ok=True)
 
-    def generate_audio_file(self, voice: str, script: str):
+    def generate_audio_file(self, voice: str, script: str, title: str, page):
         now = datetime.now()
-        filename = now.strftime("%Y-%m-%d_%H-%M") + ".mp3"
+        filename = title + f"_{page}Page" + ".mp3"
         audio_file_path = os.path.join(self.audio_files_directory, filename)
         
         audio_response = self.client.audio.speech.create(
@@ -26,5 +26,5 @@ class Voice_synthesizer:
 
         with open(audio_file_path, "wb") as audio_file:
             audio_file.write(audio_response.content)
-        
+
         return filename, f"/download-audio/{filename}"
