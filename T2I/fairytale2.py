@@ -17,31 +17,19 @@ load_dotenv()
 os.environ['STABILITY_HOST'] = 'grpc.stability.ai:443'
 key=os.environ['STABILITY_KEY2'] 
 
+
+
 # 영어 프롬프트와 한글 텍스트를 위한 리스트
 english_story_text = [
     "Once upon a time, there was a mystical forest located on the edge of a small village.",
     "This forest was filled with the sounds of birds singing and trees dancing.",
-    "However, the villagers thought the forest was too deep and maze-like, so no one dared to venture deep inside.",
-    "The children always wondered what secrets the forest held.",
-    "Among them, a curious boy named Minjun wanted to uncover the secrets of the forest.",
-    "One day, he gathered his courage and set out on an adventure into the depths of the forest.",
-    "He carried an old map, a compass, and a small bag.",
-    "As Minjun walked deeper into the forest, the trees grew taller, and the flowers became more vibrant.",
-    "Suddenly, he saw a small light twinkling through the leaves.",
-    "Minjun decided to follow the light."
+    "However, the villagers thought the forest was too deep and maze-like, so no one dared to venture deep inside."
 ]
 
 korean_story_text = [
     "옛날 옛적에 작은 마을 가장자리에 신비한 숲이 있었습니다.",
     "이 숲은 새들의 노래소리와 나무들이 춤추는 소리로 가득 차 있었습니다.",
-    "그러나 마을 사람들은 숲이 너무 깊고 미로 같다고 생각하여 아무도 깊숙이 들어가려고 하지 않았습니다.",
-    "숲에는 무슨 비밀이 숨겨져 있는지, 아이들은 항상 궁금해했습니다.",
-    "그중에서도 호기심 많은 소년 민준이는 숲의 비밀을 밝히고 싶어 했습니다.",
-    "어느 날, 용기를 내어 깊은 숲속으로 모험을 떠났습니다.",
-    "그는 오래된 지도와 나침반, 그리고 작은 가방을 들고 숲속으로 걸음을 옮겼습니다.",
-    "민준이가 숲 속을 걷다 보니, 나무들이 점점 더 커지고, 꽃들의 색깔이 더 화려해졌습니다.",
-    "그때, 갑자기 나뭇잎 사이로 작은 빛이 반짝이는 것이 보였습니다.",
-    "민준이는 그 빛을 따라가 보기로 했습니다."
+    "그러나 마을 사람들은 숲이 너무 깊고 미로 같다고 생각하여 아무도 깊숙이 들어가려고 하지 않았습니다."
 ]
 
 # 이미지 생성 함수
@@ -56,7 +44,7 @@ def generate_image_with_stability_ai(english_prompts, korean_prompts, image_fold
     for i, english_prompt in enumerate(english_prompts):
         response = stability_api.generate(
             prompt=english_prompt,
-            seed=12345,  # Unique seed for each prompt
+            seed=4253978046 + i,  # Unique seed for each prompt
             steps=50,
             cfg_scale=8.0,
             width=1024,
@@ -96,6 +84,7 @@ def get_audio_length(audio_path):
     except Exception as e:
         print(f"Error getting audio length: {e}")
         return 0
+
 
 # 비디오 생성 함수
 def generate_video_with_images_and_text(english_story_text, korean_story_text, audio_folder, image_folder, output_video_path, key,font_path ,fps=1):
@@ -139,5 +128,4 @@ os.makedirs(audio_folder, exist_ok=True)
 os.makedirs(os.path.dirname(output_video_path), exist_ok=True)
 
 # 스크립트 실행
-
-generate_video_with_images_and_text(english_story_text, korean_story_text, audio_folder, image_folder, output_video_path, key, font_path, fps=1)
+generate_video_with_images_and_text(english_story_text, korean_story_text, audio_folder, image_folder, output_video_path, key, font_path)
