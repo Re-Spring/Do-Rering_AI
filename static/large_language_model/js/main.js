@@ -62,7 +62,6 @@ function makePictures(story) {
         prompts: input_text,
       }),
     })
-      /* 지금 여기가 문제 */
       .then((response) => {
         console.log("then 1");
         // console.log("response : " + response);

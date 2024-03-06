@@ -1,6 +1,6 @@
 # main.py
 from fastapi import FastAPI, Request, HTTPException
-from routers import VoiceCloning
+from routers.dubbing_module import VoiceCloning
 from fastapi.responses import FileResponse
 from fastapi.templating import Jinja2Templates
 

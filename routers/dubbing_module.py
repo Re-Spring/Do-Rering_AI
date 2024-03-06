@@ -2,8 +2,7 @@
 from elevenlabs.client import ElevenLabs
 import requests
 from elevenlabs import generate
-
-class Dubbing_VoiceCloning:
+class Dubbing_voice_cloning:
     def __init__(self, api_key):
         self.api_key = api_key
         self.url = "https://api.elevenlabs.io/v1/voices"
@@ -31,9 +30,8 @@ class Dubbing_VoiceCloning:
             voice=user_voice_id,
             model="eleven_multilingual_v2"
         )
-    
         # 생성된 오디오 파일 저장
-        output_filename = f"../../static/voicecloning/user_dubbing/{user_id}_generated_audio.wav"
+        output_filename = f"../static/voice_cloning/user_dubbing/{user_id}_generated_audio.wav"
         with open(output_filename, 'wb') as audio_file:
             audio_file.write(audio)
 

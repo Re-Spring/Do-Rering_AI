@@ -3,9 +3,9 @@ from datetime import datetime
 from openai import OpenAI
 from dotenv import load_dotenv
 
-
-class VoiceSynthesizer:
-    def __init__(self):
+class Voice_synthesizer:
+    def __init__(self, api_key):
+        self.api_key = api_key
         dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
         load_dotenv(dotenv_path)
         self.api_key = os.environ.get("OPENAI_API_KEY")
