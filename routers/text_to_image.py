@@ -1,163 +1,120 @@
 import os
-import re
+import io
+import warnings
 import datetime
-from pathlib import Path
-
-import librosa
-import moviepy.editor as mpy
 from PIL import Image, ImageDraw, ImageFont
 from stability_sdk import client
 import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
-import glob
-import gc
-
-gc.collect()  # 가비지 컬렉터를 명시적으로 호출
+from pathlib import Path
 from dotenv import load_dotenv
+import random
+import hashlib
 
+# .env 파일에서 환경 변수를 불러오는 부분입니다.
 load_dotenv()
 
-# 환경 변수 설정
+# Stability AI 서버 정보와 API 키를 환경 변수에서 설정합니다.
 os.environ['STABILITY_HOST'] = 'grpc.stability.ai:443'
-key = os.environ['STABILITY_KEY']
+STABILITY_KEY = os.getenv("STABLE_API_KEY")
 
-# 영어 프롬프트와 한글 텍스트를 위한 리스트
-english_story_text = [
-    "Once upon a time, there was a mystical forest located on the edge of a small village.",
-    "This forest was filled with the sounds of birds singing and trees dancing.",
-    "However, the villagers thought the forest was too deep and maze-like, so no one dared to venture deep inside.",
-    "The children always wondered what secrets the forest held.",
-    "Among them, a curious boy named Minjun wanted to uncover the secrets of the forest.",
-    "One day, he gathered his courage and set out on an adventure into the depths of the forest.",
-    "He carried an old map, a compass, and a small bag.",
-    "As Minjun walked deeper into the forest, the trees grew taller, and the flowers became more vibrant.",
-    "Suddenly, he saw a small light twinkling through the leaves.",
-    "Minjun decided to follow the light."
-]
+# Stability AI 클라이언트를 초기화합니다. API 키를 사용해 서비스에 인증하고 이미지 생성 엔진을 설정합니다.
+stability_api = client.StabilityInference(
+    key=STABILITY_KEY,
+    verbose=True,
+    engine="stable-diffusion-xl-1024-v1-0",
+)
+# 경로 설정 및 필요한 디렉터리 생성
+base_dir = Path(__file__).resolve().parent.parent / "static/text_to_image"
+image_path = base_dir / "images"
+# 폰트 파일의 경로와 이미지를 저장할 폴더의 경로를 올바르게 설정하세요.
+image_font_path = base_dir / "font" / "SpoqaHanSansNeo-Light.ttf"
 
-korean_story_text = [
-    "옛날 옛적에 작은 마을 가장자리에 신비한 숲이 있었습니다.",
-    "이 숲은 새들의 노래소리와 나무들이 춤추는 소리로 가득 차 있었습니다.",
-    "그러나 마을 사람들은 숲이 너무 깊고 미로 같다고 생각하여 아무도 깊숙이 들어가려고 하지 않았습니다.",
-    "숲에는 무슨 비밀이 숨겨져 있는지, 아이들은 항상 궁금해했습니다.",
-    "그중에서도 호기심 많은 소년 민준이는 숲의 비밀을 밝히고 싶어 했습니다.",
-    "어느 날, 용기를 내어 깊은 숲속으로 모험을 떠났습니다.",
-    "그는 오래된 지도와 나침반, 그리고 작은 가방을 들고 숲속으로 걸음을 옮겼습니다.",
-    "민준이가 숲 속을 걷다 보니, 나무들이 점점 더 커지고, 꽃들의 색깔이 더 화려해졌습니다.",
-    "그때, 갑자기 나뭇잎 사이로 작은 빛이 반짝이는 것이 보였습니다.",
-    "민준이는 그 빛을 따라가 보기로 했습니다."
-]
+class T2I_generator:
+    def __init__(self, font_path: str, image_folder: str):
+        self.font_path = str(font_path)  # Path 객체를 문자열로 변환
+        self.image_folder = str(image_folder)  # Path 객체를 문자열로 변환
+        # 클래스가 초기화될 때 고정 시드 값을 설정합니다.
 
-
-# 이미지 생성 함수
-def generate_image_with_stability_ai(english_prompts, korean_prompts, image_folder, api_key, font_path):
-    print("generate_image_with_stability_ai", api_key)
-    stability_api = client.StabilityInference(
-        key=api_key,
-        verbose=True,
-        engine="stable-diffusion-xl-1024-v1-0",
-    )
-    image_paths = []
-    for i, english_prompt in enumerate(english_prompts):
-        response = stability_api.generate(
-            prompt=english_prompt,
-            seed=12345,  # Unique seed for each prompt
+    def generate_seed_from_prompt(self, prompt: str):
+        # SHA-256 해시 함수를 사용하여 프롬프트에 대한 고유한 시드 값을 생성합니다.
+        prompt_hash = hashlib.sha256(prompt.encode('utf-8')).hexdigest()
+        # 해시값의 앞부분을 정수로 변환하여 시드 값으로 사용
+        seed = int(prompt_hash[:8], 16) % (2 ** 32)  # 해시값의 앞부분을 정수로 변환하여 시드 값으로 사용
+        return seed
+    def generator_image(self, prompt: str, korean_prompt: str):
+        # 프롬프트에 기반한 시드 값 생성
+        unique_seed = self.generate_seed_from_prompt(prompt)
+        print(f"Seed for prompt1111111 '{prompt}': {unique_seed}")
+        answers = stability_api.generate(
+            prompt=prompt,
+            seed=unique_seed,
             steps=50,
-            cfg_scale=8.0,
+            cfg_scale=9.0,
             width=1024,
             height=1024,
             samples=1,
             sampler=generation.SAMPLER_K_DPMPP_2M
         )
-        for resp in response:
+
+        for resp in answers:
             for artifact in resp.artifacts:
-                if artifact.type == generation.ARTIFACT_IMAGE:
-                    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-                    image_file_name = f"image_{timestamp}_{i}.png"
-                    image_path = os.path.join(image_folder, image_file_name)
-                    with open(image_path, 'wb') as f:
-                        f.write(artifact.binary)
-                    image_paths.append(image_path)
-                    # 한글 텍스트 추가
-                    add_text_to_image(image_path, korean_prompts[i], (30, 30), font_path, 24, (255, 255, 255))
-    return image_paths
+                if artifact.finish_reason == generation.FILTER:
+                    # 안전 필터에 걸린 경우 경고 메시지를 출력하고 None을 반환합니다.
+                    warnings.warn("Your request activated the API's safety filters. Modify the prompt and try again.")
+                    return None
+                elif artifact.type == generation.ARTIFACT_IMAGE:
+                    # 이미지 생성이 성공한 경우, 이미지에 한국어 텍스트를 추가하고 저장합니다.
+                    img = Image.open(io.BytesIO(artifact.binary))
+                    img_with_text = self.add_text_to_image(img, korean_prompt)
+                    image_path = self.save_image(img_with_text, unique_seed, prompt)
+                    print(f"Seed for prompt22222222 '{prompt}': {unique_seed}")
+                    return image_path
+        return None
+    # add_text_to_image() 및 save_image() 메서드는 이전과 동일합니다.
+    def add_text_to_image(self, img: Image.Image, text: str, position: tuple = (10, 10), font_size: int = 20):
+        # 이미지에 텍스트를 추가하는 함수입니다.
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.truetype(self.font_path, font_size)
+        draw.text(position, text, font=font, fill=(255, 255, 255))
+        return img
 
+    def save_image(self, img: Image.Image, seed: int, prompt: str) -> str:
+        # 이미지를 지정된 경로에 저장하는 함수입니다.
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        img_filename = f"image_{timestamp}_seed_{seed}.png"
+        img_path = os.path.join(self.image_folder, img_filename)
+        img.save(img_path)
+        return img_path
 
-# 이미지에 텍스트 추가 함수
-def add_text_to_image(image_path, text, position, font_path, font_size, color=(255, 255, 255)):
-    try:
-        image = Image.open(image_path)
-        draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype(font_path, font_size)
-        draw.text(position, text, fill=color, font=font)
-        image.save(image_path)
-    except Exception as e:
-        print(f"Error adding text to image: {e}")
+def generate_images_from_prompts(prompts: list, korean_prompts: list):
+    t2i_gen = T2I_generator(font_path=image_font_path, image_folder=image_path)
+    for i, prompt in enumerate(prompts):
+        # 한국어 설명을 프롬프트와 함께 이미지 생성 함수에 전달합니다.
+        img_path = t2i_gen.generator_image(prompt, korean_prompts[i])
+        if img_path:
+            print(f"Image for prompt {i} saved to {img_path}")
+        else:
+            print(f"Failed to generate image for prompt {i}")
 
+# 프롬프트와 한국어 설명을 준비합니다.
+prompts = [
+    "Once upon a time, there was a mystical forest located on the edge of a small village.",
+    "This forest was filled with the sounds of birds singing and trees dancing.",
+    "However, the villagers thought the forest was too deep and maze-like, so no one dared to venture deep inside.",
+    "The children always wondered what secrets the forest held.",
+    "Among them, a curious boy named Minjun wanted to uncover the secrets of the forest."
+]
+korean_prompts = [
+"옛날, 작은 마을 가장자리에 신비로운 숲이 있었습니다.",
+"이 숲은 새들이 노래하는 소리와 나무들이 춤추는 소리로 가득 찼습니다.",
+"하지만, 마을 사람들은 숲이 너무 깊고 미로 같다고 생각해서 아무도 감히 깊은 곳으로 모험하지 못했습니다.",
+"아이들은 항상 숲이 어떤 비밀을 품고 있는지 궁금해 했습니다.",
+"그 중에서 민준이라는 호기심 많은 소년이 숲의 비밀을 밝혀내고 싶었습니다."
+]
 
-# 오디오 파일 길이 확인 함수
-def get_audio_length(audio_path):
-    try:
-        y, sr = librosa.load(audio_path, sr=None)
-        return librosa.get_duration(y=y, sr=sr)
-    except Exception as e:
-        print(f"Error getting audio length: {e}")
-        return 0
+# 고정된 시드 값을 설정하여 이미지 생성의 재현성을 확보합니다.
+fixed_seed = random.randint(0, 2 ** 32 - 1)
+print(f"{fixed_seed}", "is the fixed seed.")
 
-
-# 비디오 생성 함수
-def generate_video_with_images_and_text(english_story_text, korean_story_text, audio_folder, image_folder,
-                                        output_video_path, key, font_path, fps=1):
-    print("image_folder2", image_folder)
-    image_paths = generate_image_with_stability_ai(english_story_text, korean_story_text, image_folder, key, font_path)
-    video_clips = []
-    audio_files = sorted(glob.glob(os.path.join(audio_folder, '*.wav')), key=os.path.getmtime)
-    if not audio_files:
-        print("No audio files found.")
-        return
-
-    for i, img_path in enumerate(image_paths):
-        if i < len(audio_files):
-            audio_file = audio_files[i]
-            audio_length = get_audio_length(audio_file)
-            clip = mpy.ImageClip(img_path).set_duration(audio_length)
-            audio_clip = mpy.AudioFileClip(audio_file).set_duration(audio_length)
-            clip = clip.set_audio(audio_clip)
-            video_clips.append(clip)
-
-    if video_clips:
-        final_clip = mpy.concatenate_videoclips(video_clips, method="compose")
-        final_clip.write_videofile(output_video_path, codec="libx264", audio_codec="aac", fps=fps)
-        final_clip.close()
-    else:
-        print("Failed to generate video clips.")
-
-
-# C:\Dorering project\Do-Rering_AI\T2I\text_to_image.py
-# .\text_to_image.py
-# 경로 설정 및 필요한 디렉터리 생성
-base_dir = Path(__file__).resolve().parent.parent / "static/text_to_image"
-# 기준 경로를 사용하여 각 폴더의 경로를 설정
-image_dir = base_dir / "images"
-audio_dir = base_dir / "audio_files"
-output_video_dir = base_dir / "movies"
-font_dir = base_dir / "font"
-
-# 필요한 폴더들이 없다면 생성
-image_dir.mkdir(parents=True, exist_ok=True)
-audio_dir.mkdir(parents=True, exist_ok=True)
-output_video_dir.mkdir(parents=True, exist_ok=True)
-font_dir.mkdir(parents=True, exist_ok=True)
-
-# 최종 경로들을 문자열로 출력 (필요에 따라 사용)
-print(f"Image Directory: {image_dir}")
-print(f"Audio Directory: {audio_dir}")
-print(f"Output Video Directory: {output_video_dir}")
-print(f"Font Directory: {font_dir}")
-
-# 파일 경로 설정 (예: 출력 비디오 파일 및 폰트 파일)
-output_video_path = output_video_dir / "output_video.wav"
-font_path = font_dir / "Pretendard-Black.ttf"
-# 스크립트 실행
-
-generate_video_with_images_and_text(english_story_text, korean_story_text, audio_dir, image_dir,
-                                    output_video_path, key, font_path, fps=1)
+# 설정된 프롬프트를 사용해 이미지 생성 및 저장을 실행합니다.
+generate_images_from_prompts(prompts, korean_prompts)
