@@ -5,7 +5,7 @@ import noisereduce as nr
 import io
 import requests
 
-class VoiceCloning:
+class Voice_cloning:
     def __init__(self, api_key):
         self.api_key = api_key
         self.headers = {

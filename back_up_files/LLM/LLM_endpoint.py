@@ -8,7 +8,7 @@ from openai import OpenAI
 import json
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from app.routers.large_language_model_module import LLM_module
+from routers.large_language_model_module import Large_language_model_module
 
 # prompt key값
 load_dotenv()
@@ -21,7 +21,7 @@ app.mount("/static", StaticFiles(directory="../static"), name="static")
 templates = Jinja2Templates(directory="../templates/large_language_model")
 
 # 인스턴스
-llm_module = LLM_module(api_key=API_KEY)
+llm_module = Large_language_model_module(api_key=API_KEY)
 
 # dubbing = Dubbing_VoiceCloning(api_key=API_KEY)
 
