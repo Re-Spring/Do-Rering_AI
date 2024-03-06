@@ -1,45 +1,104 @@
+import os
 import io
 import warnings
-from pathlib import Path  # 파일 경로를 다루기 위한 모듈
-import uuid
-import random  # 랜덤 모듈 추가
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
+from stability_sdk import client
 import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
-import sys
-sys.path.append('..')
+from pathlib import Path
+from dotenv import load_dotenv
+import random
 
-# text_to_image.stableT2I 모듈에서 T2I_generator 클래스와 stability_api 인스턴스를 임포트
-from T2I.stableT2I import T2I_generator, stability_api
+# .env 파일에서 환경 변수 불러오기
+load_dotenv()
 
-# text_to_image 생성을 통해 이미지와 시드 값을 얻습니다.
-t2i_image, t2i_seed = T2I_generator.generator_image("A magical forest with unicorns and fairies")  # 메서드 이름 수정
+# 환경 변수 설정
+os.environ['STABILITY_HOST'] = 'grpc.stability.ai:443'
+STABILITY_KEY = os.getenv("STABLE_API_KEY")
 
-if t2i_image is not None and t2i_seed is not None:
-    # I2I 변환을 위한 초기 이미지로 T2I에서 생성된 이미지를 사용합니다.
-    answers2 = stability_api.generate(
-        prompt="I'm going to make the main picture of a fairy tale in which a panda is the main character. Please make the picture.",
-        init_image=t2i_image,  # T2I에서 생성된 이미지를 초기 이미지로 사용
-        seed=t2i_seed,
-        steps=50,
-        cfg_scale=8.0,
-        width=1024,
-        height=1024,
-        sampler=generation.SAMPLER_K_DPMPP_2M
-    )
+# Stability AI 클라이언트 초기화
+stability_api = client.StabilityInference(
+    key=STABILITY_KEY,
+    verbose=True,
+    engine="stable-diffusion-xl-1024-v1-0",
+)
 
-    for resp in answers2:
-        for artifact in resp.artifacts:
-            if artifact.finish_reason == generation.FILTER:
-                warnings.warn("Your request activated the API's safety filters and could not be processed. Please modify the prompt and try again.")
-            if artifact.type == generation.ARTIFACT_IMAGE:
-                img2 = Image.open(io.BytesIO(artifact.binary))
-                # 이미지 저장 경로 설정
-                image_dir = Path(__file__).resolve().parent.parent / "static/text_to_image/images"
-                image_dir.mkdir(parents=True, exist_ok=True)
+class T2I_generator:
+    @staticmethod
+    def generator_image(prompt: str, seed_number: int) -> Image.Image:
+        answers = stability_api.generate(
+            prompt=prompt,
+            seed=seed_number,
+            steps=50,
+            cfg_scale=8.0,
+            width=1024,
+            height=1024,
+            samples=1,
+            sampler=generation.SAMPLER_K_DPMPP_2M
+        )
 
-                # UUID를 이용하여 이미지 파일명 설정
-                img_filename = f"{uuid.uuid4()}.png"
-                img_path = image_dir / img_filename
+        for resp in answers:
+            for artifact in resp.artifacts:
+                if artifact.finish_reason == generation.FILTER:
+                    warnings.warn("Your request activated the API's safety filters. Modify the prompt and try again.")
+                elif artifact.type == generation.ARTIFACT_IMAGE:
+                    img = Image.open(io.BytesIO(artifact.binary))
+                    return img
 
-                img2.save(img_path)  # 수정된 부분: img2 변수를 사용하여 이미지 파일 저장
-                print(f"Image saved to {img_path}")  # 이미지 파일 경로 출력
+        return None
+
+def generate_images_from_prompts(prompts: list, seed_number: int, num_images_per_prompt: int = 5):
+    for i, prompt in enumerate(prompts):
+        for j in range(num_images_per_prompt):
+            img = T2I_generator.generator_image(prompt, seed_number + j)
+            if img:
+                img_path = save_image(img, seed_number + j, i, j)
+                print(f"Image for prompt {i} variation {j} saved to {img_path}")
+            else:
+                print(f"Failed to generate image for prompt {i} variation {j}")
+
+def save_image(img: Image.Image, seed: int, prompt_index: int, variation_index: int) -> str:
+    image_dir = Path(__file__).resolve().parent.parent / "static/text_to_image/images/"
+    image_dir.mkdir(parents=True, exist_ok=True)
+    img_filename = f"prompt_{prompt_index}_variation_{variation_index}_seed_{seed}.png"
+    img_path = image_dir / img_filename
+    img.save(img_path)
+    return str(img_path)
+
+# 프롬프트 목록
+prompts = [
+    """
+# Secret friends in a fairy tale
+
+## a story introduction
+Located on the edge of a secluded village, the mysterious forest was filled with the sounds of birds singing and trees dancing. But the villagers said that the forest was so deep and maze-like that no one could go deep. The children always wondered what the secret behind the forest was.
+
+## Roles
+- You are a specialized machine that is good at drawing and creating images.
+
+## an audience
+- This product is aimed at Python developers who are proficient in image types.
+
+## a task
+The ultimate goal is to convert document types into images based on story introductions. To do this, we consider a step-by-step approach. Information about document types can be found in "Document Types" below.
+
+## Step-by-step Instructions (Step)
+1. You can use three document titles cited from the site where you searched the model name on the Internet.
+2. Referring to the document title, the first image extracts the image cover.
+3. Translate the title of the document into English.
+4. If you have made a cover with a title, extract the remaining images. However, extract a consistent image. The most helpful thing when extracting an image is the 'action noun'. A behavioral noun means an action or event. It simply means that the root of the word is 'verb.' Words that do not correspond to action nouns are related to brand names, product names, product categories, product types, product characteristics, and more.
+
+## Document Type
+- Create an image for each paragraph of the fairy tale content. It visually expresses the story of a fairy tale.
+
+## Policy
+- It does not create unnecessary images.
+- Extract the image without being crushed.
+    """
+]
+
+# 고정 시드 값 설정
+fixed_seed = random.randint(0, 2**32-1)
+print(f"{fixed_seed}", "is the fixed seed.")
+
+# 각 프롬프트에 대해 이미지 생성
+generate_images_from_prompts(prompts, fixed_seed)
