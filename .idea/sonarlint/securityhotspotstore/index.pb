@@ -20,3 +20,7 @@ C
 routers/__init__.py,3/e/3ec472e782bc2f42892bec70d6c75cd84b65e9e5
 I
 routers/dubbing_module.py,3/b/3bd5da56a2d7638fe0ead7566267e95bd7153ee3
+7
+main.py,f/1/f1bdda93d9a278e358509d498e17d97764c1fb29
+@
+T2I/fairytale.py,9/e/9e7b24349e6b55cbc67cde867138f3fafe634857

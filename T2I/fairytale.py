@@ -1,6 +1,8 @@
 import os
 import re
 import datetime
+from pathlib import Path
+
 import librosa
 import moviepy.editor as mpy
 from PIL import Image, ImageDraw, ImageFont
@@ -108,7 +110,7 @@ def generate_video_with_images_and_text(english_story_text, korean_story_text, a
     print("image_folder2", image_folder)
     image_paths = generate_image_with_stability_ai(english_story_text, korean_story_text, image_folder, key, font_path)
     video_clips = []
-    audio_files = sorted(glob.glob(os.path.join(audio_folder, '*.mp3')), key=os.path.getmtime)
+    audio_files = sorted(glob.glob(os.path.join(audio_folder, '*.wav')), key=os.path.getmtime)
     if not audio_files:
         print("No audio files found.")
         return
@@ -133,19 +135,29 @@ def generate_video_with_images_and_text(english_story_text, korean_story_text, a
 # C:\Dorering project\Do-Rering_AI\T2I\fairytale.py
 # .\fairytale.py
 # 경로 설정 및 필요한 디렉터리 생성
-base_dir = os.path.dirname(os.path.abspath(__file__))
-print(base_dir)
-image_folder = 'static\\T2I\\generated_images'
-print("image_folder1", image_folder)
-audio_folder = 'static\\T2I\\audio_files'
-output_video_path = 'static\\T2I\\movies\\output_video.mp4'
-font_path = 'static\\T2I\\font\\Pretendard-Black.ttf'
+base_dir = Path(__file__).resolve().parent.parent / "static/text_to_image"
+# 기준 경로를 사용하여 각 폴더의 경로를 설정
+image_dir = base_dir / "images"
+audio_dir = base_dir / "audio_files"
+output_video_dir = base_dir / "movies"
+font_dir = base_dir / "font"
 
-os.makedirs(image_folder, exist_ok=True)
-os.makedirs(audio_folder, exist_ok=True)
-os.makedirs(os.path.dirname(output_video_path), exist_ok=True)
+# 필요한 폴더들이 없다면 생성
+image_dir.mkdir(parents=True, exist_ok=True)
+audio_dir.mkdir(parents=True, exist_ok=True)
+output_video_dir.mkdir(parents=True, exist_ok=True)
+font_dir.mkdir(parents=True, exist_ok=True)
 
+# 최종 경로들을 문자열로 출력 (필요에 따라 사용)
+print(f"Image Directory: {image_dir}")
+print(f"Audio Directory: {audio_dir}")
+print(f"Output Video Directory: {output_video_dir}")
+print(f"Font Directory: {font_dir}")
+
+# 파일 경로 설정 (예: 출력 비디오 파일 및 폰트 파일)
+output_video_path = output_video_dir / "output_video.wav"
+font_path = font_dir / "Pretendard-Black.ttf"
 # 스크립트 실행
 
-generate_video_with_images_and_text(english_story_text, korean_story_text, audio_folder, image_folder,
+generate_video_with_images_and_text(english_story_text, korean_story_text, audio_dir, image_dir,
                                     output_video_path, key, font_path, fps=1)
