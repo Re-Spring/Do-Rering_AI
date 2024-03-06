@@ -8,7 +8,7 @@ from openai import OpenAI
 import json
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from app.routers.large_language_model_module import LLM_module
+from routers import LLM_module
 
 # prompt key값
 load_dotenv()
