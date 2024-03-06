@@ -18,7 +18,7 @@ class Dubbing_voice_cloning:
         data = response.json()
         return [voice for voice in data["voices"] if voice["category"] == "cloned"]
 
-    def generate_audio(self, story_text, user_id):
+    def generate_audio(self, story_text, user_id, num):
         user_voice_id = next((voice["voice_id"] for voice in self.cloned_voices if voice["name"] == user_id), None)
         if user_voice_id is None:
             raise ValueError("Invalid user ID")
@@ -31,7 +31,7 @@ class Dubbing_voice_cloning:
             model="eleven_multilingual_v2"
         )
         # 생성된 오디오 파일 저장
-        output_filename = f"../static/voice_cloning/user_dubbing/{user_id}_generated_audio.wav"
+        output_filename = f"static/voice_cloning/user_dubbing/{user_id}{num+1}_generated_audio.wav"
         with open(output_filename, 'wb') as audio_file:
             audio_file.write(audio)
 
