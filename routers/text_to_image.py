@@ -112,6 +112,7 @@ korean_prompts = [
 "그 중에서 민준이라는 호기심 많은 소년이 숲의 비밀을 밝혀내고 싶었습니다."
 ]
 
+# deepl API를 사용하여 한국어로 번역된 프롬프트를 준비합니다.
 # 고정된 시드 값을 설정하여 이미지 생성의 재현성을 확보합니다.
 fixed_seed = random.randint(0, 2 ** 32 - 1)
 print(f"{fixed_seed}", "is the fixed seed.")
