@@ -85,6 +85,7 @@ class T2I_generater_from_prompts:
         self.image_font_path = image_font_path  # Path 객체를 문자열로 변환
         self.image_path = image_path  # Path 객체를 문자열로 변환
 
+
     def generate_images_from_prompts(self, prompts, korean_prompts):
         t2i_gen = T2I_generator(api_key=self.api_key, image_font_path=self.image_font_path, image_path=self.image_path)
         for i, prompt in enumerate(prompts):
@@ -94,4 +95,5 @@ class T2I_generater_from_prompts:
                 print(f"Image for prompt {i} saved to {img_path}")
             else:
                 print(f"Failed to generate image for prompt {i}")
+
 
