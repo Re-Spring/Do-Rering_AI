@@ -10,18 +10,16 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from routers import config
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(current_dir)
 
 # Module import
+from config import STABILITY_KEY, image_path, image_font_path, DEEPL_API_KEY, audio_path
+
 from routers.large_language_model_module import Large_language_model_module
 from routers.voice_module import Voice_synthesizer
 from routers.voice_cloning_module import Voice_cloning
 from routers.dubbing_module import Dubbing_voice_cloning
 from routers.text_to_image import T2I_generator, T2I_generater_from_prompts
-from routers.config import STABILITY_KEY, prompts, korean_prompts, image_path, image_font_path
+from routers.deepl_ai import Deepl_api
 
 # prompt key 값 가져오기
 load_dotenv()
@@ -42,14 +40,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-text = config.prompts
+
+
 # 인스턴스 생성
 llm_module = Large_language_model_module(api_key=OPEN_API_KEY)
-ai_voice_module = Voice_synthesizer(api_key=OPEN_API_KEY)
+ai_voice_module = Voice_synthesizer(api_key=OPEN_API_KEY, audio_path=audio_path)
 voice_cloning_module = Voice_cloning(api_key=VOICE_CLONING_API_KEY)
-clone_dubbing_module = Dubbing_voice_cloning(api_key=VOICE_CLONING_API_KEY)
+clone_dubbing_module = Dubbing_voice_cloning(api_key=VOICE_CLONING_API_KEY, audio_path=audio_path)
 t2i_module = T2I_generator(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
 t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
+deepl_module = Deepl_api(api_key=DEEPL_API_KEY)
 
 
 # 필요한 엔드포인트
@@ -74,15 +74,14 @@ async def generate_story_endpoint(request: Request):
     print(page1)
     print(len(story_data))
 
-    # korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
+    korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
+    print("korean_prompts", korean_prompts)
+    english_prompts = deepl_module.translate_text(text= korean_prompts, target_lang="EN-US")
+    english_prompts = [english_prompts[i].text for i in range(len(english_prompts))]
+    print("english_prompts", english_prompts)
+    t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts)
 
-    print(korean_prompts)
-    t2i_prompt_module.generate_images_from_prompts(prompts, korean_prompts)
-
-    # 여기부터 음성 파일
-    # dubbing_module : 클로닝 데이터로 더빙
-
-    # Dubbing 파트(일반 AI 목소리)
+    # Dubbing 파트(voiceCloning/dubbing)
     # "echo" 부분의 voice 입력 받을 수 있도록 할 예정
     voice = request_data["voice"]
     title = story_data["paragraph0"]
@@ -100,7 +99,7 @@ async def generate_story_endpoint(request: Request):
             clone_dubbing_module.generate_audio(story_data[page], "hj1234", i+1)
 
     # 각 페이지 별 동화를 영상화 -> 페이지가 6개다. -> 영상 6개
-    # audio + image + text -> page 별 영상 1~6p
+    # audios + image + text -> page 별 영상 1~6p
     # 각 페이지 별 영상을 합침 -> 동화 완성
 
     return story
