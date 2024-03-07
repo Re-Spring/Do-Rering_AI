@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from routers import config
+import config
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
@@ -21,7 +21,7 @@ from routers.voice_module import Voice_synthesizer
 from routers.voice_cloning_module import Voice_cloning
 from routers.dubbing_module import Dubbing_voice_cloning
 from routers.text_to_image import T2I_generator, T2I_generater_from_prompts
-from routers.config import STABILITY_KEY, prompts, korean_prompts, image_path, image_font_path
+from config import STABILITY_KEY, prompts, korean_prompts, image_path, image_font_path
 
 # prompt key 값 가져오기
 load_dotenv()

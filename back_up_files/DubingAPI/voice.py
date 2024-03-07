@@ -16,7 +16,7 @@ client = OpenAI(api_key=API_KEY)
 
 templates = Jinja2Templates(directory="templates/Dubing")
 
-AUDIO_FILES_DIRECTORY = "static/dubing/audio_files"
+AUDIO_FILES_DIRECTORY = "static/dubing/audios"
 os.makedirs(AUDIO_FILES_DIRECTORY, exist_ok=True)
 
 @app.get("/", response_class=HTMLResponse)

@@ -10,8 +10,11 @@ os.environ['STABILITY_HOST'] = 'grpc.stability.ai:443'
 STABILITY_KEY = os.environ.get("STABILITY_KEY")
 
 # 경로 설정 및 필요한 디렉터리 생성
-base_dir = Path(__file__).resolve().parent.parent/"static/text_to_image"
+base_dir = Path(__file__).resolve().parent / "static/text_to_image"
 image_path = str(base_dir/"images")
+# 이미지 디렉토리가 존재하지 않으면 생성
+if not image_path.exists():
+    image_path.mkdir(parents=True)
 image_font_path = str(base_dir / "font" / "SpoqaHanSansNeo-Light.ttf")
 
 # 임시 프롬프트
