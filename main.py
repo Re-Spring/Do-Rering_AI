@@ -1,20 +1,27 @@
 # 전체 동작할 로직 작성
-import os, sys
+import os
 import json
+import sys
 
 import uvicorn
-from dotenv import load_dotenv
 from openai import OpenAI
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
+from routers import config
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_dir)
 
 # Module import
 from routers.large_language_model_module import Large_language_model_module
 from routers.voice_module import Voice_synthesizer
 from routers.voice_cloning_module import Voice_cloning
 from routers.dubbing_module import Dubbing_voice_cloning
+from routers.text_to_image import T2I_generator, T2I_generater_from_prompts
+from routers.config import STABILITY_KEY, prompts, korean_prompts, image_path, image_font_path
 
 # prompt key 값 가져오기
 load_dotenv()
@@ -35,12 +42,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+text = config.prompts
 # 인스턴스 생성
 llm_module = Large_language_model_module(api_key=OPEN_API_KEY)
 ai_voice_module = Voice_synthesizer(api_key=OPEN_API_KEY)
 voice_cloning_module = Voice_cloning(api_key=VOICE_CLONING_API_KEY)
 clone_dubbing_module = Dubbing_voice_cloning(api_key=VOICE_CLONING_API_KEY)
+t2i_module = T2I_generator(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
+t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
+
 
 # 필요한 엔드포인트
 # 1. 동화 생성 엔드포인트 -> 이야기 생성 + 이미지 생성 + 더빙 + 앞에 내용을 기반으로 동영상으로 동화 생성
@@ -51,6 +61,7 @@ clone_dubbing_module = Dubbing_voice_cloning(api_key=VOICE_CLONING_API_KEY)
 # 매개 변수에 voice 추가
 @app.post("/generateStory")
 async def generate_story_endpoint(request: Request):
+    print("엔드포인트 들어옴")
     # LLM_module의 generate_story 함수를 호출하여 응답을 story 변수에 저장
     story = await llm_module.generate_story(request)
     request_data = await request.json()
@@ -63,7 +74,10 @@ async def generate_story_endpoint(request: Request):
     print(page1)
     print(len(story_data))
 
-    # 여기 부분에 T2I 들어갈 예정
+    # korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
+
+    print(korean_prompts)
+    t2i_prompt_module.generate_images_from_prompts(prompts, korean_prompts)
 
     # 여기부터 음성 파일
     # dubbing_module : 클로닝 데이터로 더빙
@@ -72,6 +86,7 @@ async def generate_story_endpoint(request: Request):
     # "echo" 부분의 voice 입력 받을 수 있도록 할 예정
     voice = request_data["voice"]
     title = story_data["paragraph0"]
+
     if(voice != "myVoice"):
         for i in range(0, len_story):
             print(f"페이지 {i+1}번쨰 음성파일 생성중")
@@ -97,6 +112,6 @@ async def generate_voice_cloning_endpoint(request: Request):
     # voice_cloning_module : 학습
     return request
 
-# 서버 자동 실행 ( 파이썬은 포트 8002 쓸거임)
+# 서버 자동 실행 ( 파이썬은 포트 8002 쓸거임 )
 if __name__ == "__main__":
     uvicorn.run("main:app", port=8002, reload=True)
