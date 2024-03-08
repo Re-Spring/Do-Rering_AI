@@ -1,4 +1,4 @@
 
 Еpython:S101"gRename class "Text_to_image" to match the regular expression ^_?([A-Z_][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$.(║ЇХ╔8╪Ь┤▀с1
-npython:S930?"KRemove 1 unexpected arguments; 'save_image' expects 2 positional arguments.(я▐╬Й■    8б╪Ўсс1
+npython:S930?"KRemove 1 unexpected arguments; 'save_image' expects 2 positional arguments.(я▐╬Й■    8Э╖■сс1
 Тpython:S101W"tRename class "T2I_generater_from_prompts" to match the regular expression ^_?([A-Z_][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$.(н╫╟∙8в╪Ўсс1
