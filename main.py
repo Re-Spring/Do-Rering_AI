@@ -65,10 +65,11 @@ async def generate_story_endpoint(request: Request):
     # LLM_module의 generate_story 함수를 호출하여 응답을 story 변수에 저장
     story = await llm_module.generate_story(request)
     request_data = await request.json()
-
+    print("스토리 완성")
     # story_response에서 JSON 데이터를 추출
     story_data = json.loads(story.body.decode('utf-8'))
 
+    title = story_data["paragraph0"]
     page1 = story_data["paragraph1"]
     len_story = len(story_data)
     print(page1)
@@ -79,12 +80,11 @@ async def generate_story_endpoint(request: Request):
     english_prompts = deepl_module.translate_text(text= korean_prompts, target_lang="EN-US")
     english_prompts = [english_prompts[i].text for i in range(len(english_prompts))]
     print("english_prompts", english_prompts)
-    t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts)
+    t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts, title = title)
 
     # Dubbing 파트(voiceCloning/dubbing)
     # "echo" 부분의 voice 입력 받을 수 있도록 할 예정
     voice = request_data["voice"]
-    title = story_data["paragraph0"]
 
     if(voice != "myVoice"):
         for i in range(0, len_story):
@@ -96,7 +96,7 @@ async def generate_story_endpoint(request: Request):
             print(f"페이지 {i+1}번쨰 음성파일 생성중")
             page = f"paragraph{i}"
 
-            clone_dubbing_module.generate_audio(story_data[page], "hj1234", i+1)
+            clone_dubbing_module.generate_audio(title, story_data[page], "hj1234", i)
 
     # 각 페이지 별 동화를 영상화 -> 페이지가 6개다. -> 영상 6개
     # audios + image + text -> page 별 영상 1~6p
