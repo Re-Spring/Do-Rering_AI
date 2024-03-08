@@ -13,6 +13,6 @@ DEEPL_API_KEY = os.environ.get("DEEPL_API_KEY")
 # 경로 설정 및 필요한 디렉터리 생성
 base_dir = Path(__file__).resolve().parent/"static"
 image_path = str(base_dir/"images")
-image_font_path = str(base_dir / "font" / "SpoqaHanSansNeo-Light.ttf")
+image_font_path = str(base_dir / "font" / "SpoqaHanSansNeo-Bold.ttf")
 audio_path = str(base_dir / "audios")
 video_path = str(base_dir / "videos")
