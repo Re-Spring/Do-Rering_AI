@@ -35,7 +35,7 @@ class T2I_generator:
         seed = int(prompt_hash[:8], 16) % (2 ** 32)  # 해시값의 앞부분을 정수로 변환하여 시드 값으로 사용
         return seed
 
-    def generator_image(self, prompt: str, korean_prompt: str):
+    def generator_image(self, prompt: str, korean_prompt: str, title: str):
         # 프롬프트에 기반한 시드 값 생성
         unique_seed = self.generate_seed_from_prompt(prompt)
         print(f"Seed for prompt1111111 '{prompt}': {unique_seed}")
@@ -60,7 +60,7 @@ class T2I_generator:
                     # 이미지 생성이 성공한 경우, 이미지에 한국어 텍스트를 추가하고 저장합니다.
                     img = Image.open(io.BytesIO(artifact.binary))
                     img_with_text = self.add_text_to_image(img, korean_prompt)
-                    image_path = self.save_image(img_with_text, unique_seed, prompt)
+                    image_path = self.save_image(img_with_text, title)
                     print(f"Seed for prompt22222222 '{prompt}': {unique_seed}")
                     return image_path
         return None
@@ -72,15 +72,16 @@ class T2I_generator:
         draw.text(position, text, font=font, fill=(255, 255, 255))
         return img
 
-    def save_image(self, img: Image.Image, seed: int, prompt: str) -> str:
+    def save_image(self, img: Image.Image, title: str) -> str:
         # 이미지를 지정된 경로에 저장하는 함수입니다.
         timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        img_filename = f"image_{timestamp}_seed_{seed}.png"
-        img_path = Path(os.path.join(self.image_folder, img_filename))
-        if img_path.exists():
-            img_path.mkdir(parent=True)
-        img.save(img_path)
-        img_path = str(img_path)
+        img_path = f"{title}"
+        img_filepath = Path(os.path.join(self.image_folder, img_path))
+        img_filename = os.path.join(self.image_folder, f"{title}_{timestamp}.png")
+        if img_filepath.exists():
+            img_filepath.mkdir(parents = True)
+        img.save(img_filename)
+        img_path = str(img_filename)
         return img_path
 
 class T2I_generater_from_prompts:
@@ -89,11 +90,11 @@ class T2I_generater_from_prompts:
         self.image_font_path = image_font_path  # Path 객체를 문자열로 변환
         self.image_path = image_path  # Path 객체를 문자열로 변환
 
-    def generate_images_from_prompts(self, english_prompts, korean_prompts):
+    def generate_images_from_prompts(self, english_prompts, korean_prompts, title):
         t2i_gen = T2I_generator(api_key=self.api_key, image_font_path=self.image_font_path, image_path=self.image_path)
         for i, prompt in enumerate(english_prompts):
             # 한국어 설명을 프롬프트와 함께 이미지 생성 함수에 전달합니다.
-            img_path = t2i_gen.generator_image(english_prompts[i], korean_prompts[i])
+            img_path = t2i_gen.generator_image(english_prompts[i], korean_prompts[i], title)
             if img_path:
                 print(f"Image for prompt {i} saved to {img_path}")
             else:
