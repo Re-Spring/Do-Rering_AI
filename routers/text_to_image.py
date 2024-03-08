@@ -38,6 +38,7 @@ class Text_to_image:
     def generator_image(self, prompt: str, korean_prompt: str):
         # 프롬프트에 기반한 시드 값 생성
         unique_seed = self.generate_seed_from_prompt(prompt)
+        print(f"Seed for prompt1111111 '{prompt}': {unique_seed}")
         answers = self.stability_api.generate(
             prompt=prompt,
             seed=unique_seed,
@@ -60,6 +61,7 @@ class Text_to_image:
                     img = Image.open(io.BytesIO(artifact.binary))
                     img_with_text = self.add_text_to_image(img, korean_prompt)
                     image_path = self.save_image(img_with_text, unique_seed, prompt)
+                    print(f"Seed for prompt22222222 '{prompt}': {unique_seed}")
                     return image_path
         return None
     # add_text_to_image() 및 save_image() 메서드는 이전과 동일합니다.
@@ -70,15 +72,16 @@ class Text_to_image:
         draw.text(position, text, font=font, fill=(255, 255, 255))
         return img
 
-    def save_image(self, img: Image.Image, seed: int, prompt: str) -> str:
+    def save_image(self, img: Image.Image, title: str) -> str:
         # 이미지를 지정된 경로에 저장하는 함수입니다.
         timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        img_filename = f"image_{timestamp}_seed_{seed}.png"
-        img_path = Path(os.path.join(self.image_folder, img_filename))
-        if img_path.exists():
-            img_path.mkdir(parent=True)
-        img.save(img_path)
-        img_path = str(img_path)
+        img_path = f"{title}"
+        img_filepath = Path(os.path.join(self.image_folder, img_path))
+        img_filename = os.path.join(self.image_folder, f"{title}_{timestamp}.png")
+        if img_filepath.exists():
+            img_filepath.mkdir(parents = True)
+        img.save(img_filename)
+        img_path = str(img_filename)
         return img_path
 
 class T2I_generater_from_prompts:

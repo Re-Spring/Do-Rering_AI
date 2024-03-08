@@ -18,7 +18,7 @@ from routers.large_language_model_module import Large_language_model_module
 from routers.voice_module import Voice_synthesizer
 from routers.voice_cloning_module import Voice_cloning
 from routers.dubbing_module import Dubbing_voice_cloning
-from routers.text_to_image import Text_to_image, T2I_generater_from_prompts
+from routers.text_to_image import T2I_generator, T2I_generater_from_prompts
 from routers.deepl_ai import Deepl_api
 
 # prompt key 값 가져오기
@@ -47,7 +47,7 @@ llm_module = Large_language_model_module(api_key=OPEN_API_KEY)
 ai_voice_module = Voice_synthesizer(api_key=OPEN_API_KEY, audio_path=audio_path)
 voice_cloning_module = Voice_cloning(api_key=VOICE_CLONING_API_KEY)
 clone_dubbing_module = Dubbing_voice_cloning(api_key=VOICE_CLONING_API_KEY, audio_path=audio_path)
-t2i_module = Text_to_image(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
+t2i_module = T2I_generator(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
 t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
 deepl_module = Deepl_api(api_key=DEEPL_API_KEY)
 
@@ -70,13 +70,18 @@ async def generate_story_endpoint(request: Request):
     request_data = await request.json()
 
     # 생성된 이야기를 JSON 형식에서 파싱합니다.
+    print("스토리 완성")
+    # story_response에서 JSON 데이터를 추출
     story_data = json.loads(story.body.decode('utf-8'))
 
     # 첫 번째 단락을 가져옵니다.
+    title = story_data["paragraph0"]
     page1 = story_data["paragraph1"]
 
     # 이야기 데이터의 총 길이(단락 수)를 계산합니다.
     len_story = len(story_data)
+    print(page1)
+    print(len(story_data))
 
     # 첫 번째 단락과 전체 길이를 로그로 출력합니다.
     # print(page1)
@@ -95,6 +100,7 @@ async def generate_story_endpoint(request: Request):
 
     # 영어로 번역된 단락들을 이미지로 변환하는 모듈을 호출합니다.
     t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts)
+    t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts, title = title)
 
     # Dubbing 파트(voiceCloning/dubbing)
     # "echo" 부분의 voice 입력 받을 수 있도록 할 예정
@@ -126,6 +132,7 @@ async def generate_story_endpoint(request: Request):
 
             # 사용자의 목소리로 음성을 복제하는 모듈을 호출합니다.
             clone_dubbing_module.generate_audio(story_data[page], "hj1234", i + 1)
+            clone_dubbing_module.generate_audio(title, story_data[page], "hj1234", i)
 
     # 각 페이지 별 동화를 영상화 -> 페이지가 6개다. -> 영상 6개
     # audios + image + text -> page 별 영상 1~6p

@@ -15,7 +15,8 @@ class Voice_synthesizer:
     def generate_audio_file(self, voice: str, script: str, title: str, page):
         now = datetime.now()
         filename = title + f"_{page}Page" + ".mp3"
-        audio_file_path = Path(os.path.join(self.audio_path, filename))
+        audio_path = Path(os.path.join(self.audio_path, title))
+        audio_file_path = Path(os.path.join(audio_path,filename))
         
         audio_response = self.client.audio.speech.create(
             model="tts-1",
@@ -23,7 +24,7 @@ class Voice_synthesizer:
             input=script,
         )
 
-        audio_path = Path(self.audio_path)
+
         if not audio_path.exists():
             audio_path.mkdir(parents = True)
 
