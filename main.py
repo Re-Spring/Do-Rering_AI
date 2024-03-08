@@ -61,41 +61,77 @@ deepl_module = Deepl_api(api_key=DEEPL_API_KEY)
 # 매개 변수에 voice 추가
 @app.post("/generateStory")
 async def generate_story_endpoint(request: Request):
+    # 요청이 들어왔을 때의 로그를 출력합니다.
     print("엔드포인트 들어옴")
     # LLM_module의 generate_story 함수를 호출하여 응답을 story 변수에 저장
     story = await llm_module.generate_story(request)
+
+    # 요청 데이터를 JSON 형식으로 변환합니다.
     request_data = await request.json()
+
+    # 생성된 이야기를 JSON 형식에서 파싱합니다.
     print("스토리 완성")
     # story_response에서 JSON 데이터를 추출
     story_data = json.loads(story.body.decode('utf-8'))
 
+    # 첫 번째 단락을 가져옵니다.
     title = story_data["paragraph0"]
     page1 = story_data["paragraph1"]
+
+    # 이야기 데이터의 총 길이(단락 수)를 계산합니다.
     len_story = len(story_data)
     print(page1)
     print(len(story_data))
 
+    # 첫 번째 단락과 전체 길이를 로그로 출력합니다.
+    # print(page1)
+    # print(len(story_data))
+
+    # 한국어로 된 모든 단락을 리스트로 생성합니다.
     korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
     print("korean_prompts", korean_prompts)
-    english_prompts = deepl_module.translate_text(text= korean_prompts, target_lang="EN-US")
+
+    # Deepl 모듈을 사용하여 한국어 단락을 영어로 번역합니다.
+    english_prompts = deepl_module.translate_text(text=korean_prompts, target_lang="EN-US")
+
+    # 번역된 결과에서 텍스트만 추출하여 리스트로 저장합니다.
     english_prompts = [english_prompts[i].text for i in range(len(english_prompts))]
     print("english_prompts", english_prompts)
+
+    # 영어로 번역된 단락들을 이미지로 변환하는 모듈을 호출합니다.
+    t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts)
     t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts, title = title)
 
     # Dubbing 파트(voiceCloning/dubbing)
     # "echo" 부분의 voice 입력 받을 수 있도록 할 예정
+    # 요청 데이터에서 'voice' 파라미터를 추출합니다.
     voice = request_data["voice"]
 
-    if(voice != "myVoice"):
+    # 이야기의 제목을 추출합니다.
+    title = story_data["paragraph0"]
+
+    # 사용자가 설정한 목소리가 'myVoice'가 아닌 경우, AI가 제공하는 목소리로 음성 파일을 생성합니다.
+    if (voice != "myVoice"):
         for i in range(0, len_story):
-            print(f"페이지 {i+1}번쨰 음성파일 생성중")
-            page = f"paragraph{i}"
-            ai_voice_module.generate_audio_file(voice, story_data[page], title, i+1)
-    else:
-        for i in range(0, len_story):
-            print(f"페이지 {i+1}번쨰 음성파일 생성중")
+            # 음성 파일 생성 중임을 로그로 출력합니다.
+            print(f"페이지 {i + 1}번째 음성파일 생성중")
+
+            # 현재 페이지를 지정합니다.
             page = f"paragraph{i}"
 
+            # AI 음성 모듈을 사용하여 음성 파일을 생성합니다.
+            ai_voice_module.generate_audio_file(voice, story_data[page], title, i + 1)
+    else:
+        # 'myVoice'가 선택된 경우, 사용자의 목소리로 음성을 복제하여 음성 파일을 생성합니다.
+        for i in range(0, len_story):
+            # 음성 파일 생성 중임을 로그로 출력합니다.
+            print(f"페이지 {i + 1}번째 음성파일 생성중")
+
+            # 현재 페이지를 지정합니다.
+            page = f"paragraph{i}"
+
+            # 사용자의 목소리로 음성을 복제하는 모듈을 호출합니다.
+            clone_dubbing_module.generate_audio(story_data[page], "hj1234", i + 1)
             clone_dubbing_module.generate_audio(title, story_data[page], "hj1234", i)
 
     # 각 페이지 별 동화를 영상화 -> 페이지가 6개다. -> 영상 6개
