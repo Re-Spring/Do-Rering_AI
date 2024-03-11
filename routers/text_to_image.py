@@ -63,7 +63,7 @@ class Text_to_image:
                     return image_path
         return None
     # add_text_to_image() 및 save_image() 메서드는 이전과 동일합니다.
-    def add_text_to_image(self, img: Image.Image, text: str, position: tuple = (10, 10), font_size: int = 200):
+    def add_text_to_image(self, img: Image.Image, text: str, position: tuple = (10, 10), font_size: int = 17):
         # 이미지에 텍스트를 추가하는 함수입니다.
         draw = ImageDraw.Draw(img)
         font = ImageFont.truetype(self.font_path, font_size)

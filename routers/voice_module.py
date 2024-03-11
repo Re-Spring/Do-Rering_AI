@@ -16,7 +16,7 @@ class Voice_synthesizer:
         now = datetime.now()
         filename = title + f"_{page}Page" + ".wav"
         audio_path = Path(os.path.join(self.audio_path, title))
-        audio_file_path = Path(os.path.join(audio_path,filename))
+        audio_file_path = os.path.join(str(audio_path), filename)
         
         audio_response = self.client.audio.speech.create(
             model="tts-1",
@@ -31,4 +31,4 @@ class Voice_synthesizer:
         with open(audio_file_path, "wb") as audio_file:
             audio_file.write(audio_response.content)
 
-        return f"/download-audios/{filename}"
+        return audio_file_path
