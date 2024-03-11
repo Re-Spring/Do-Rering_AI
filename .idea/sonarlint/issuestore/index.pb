@@ -22,3 +22,11 @@ G
 routers/voice_module.py,7/9/7942b375aca1772373fe2b325ed9376ec37719a7
 4
 .env,3/c/3c84dcdc6bbe3d7817c49dcdc327b926fea1808a
+C
+routers/deepl_ai.py,8/1/814d86b25064fc6542c2b88786063a7b07a85bdf
+?
+routers/main.py,a/7/a7ecb61340d4cced1e0ee44c205d900e2d34f91f
+G
+routers/video_module.py,5/b/5b4b8a0d74d55ceb16a81fc36bba4e9095cf7559
+?
+routers/text.py,d/f/df013941bf2d371b3a6cf85a390d5a67dedef815
