@@ -182,6 +182,7 @@ async def generate_story_endpoint(request: Request):
 # 목소리 voice_cloning 학습 엔드포인트
 @app.post("/voiceCloning")
 async def generate_voice_cloning_endpoint(request: Request):
+    print("voiceCloning ENDpoint 들어옴")
     # voice_cloning_module : 학습
     return request
 
