@@ -14,7 +14,7 @@ class Voice_synthesizer:
 
     def generate_audio_file(self, voice: str, script: str, title: str, page):
         now = datetime.now()
-        filename = title + f"_{page}Page" + ".mp3"
+        filename = title + f"_{page}Page" + ".wav"
         audio_path = Path(os.path.join(self.audio_path, title))
         audio_file_path = Path(os.path.join(audio_path,filename))
         
@@ -31,4 +31,4 @@ class Voice_synthesizer:
         with open(audio_file_path, "wb") as audio_file:
             audio_file.write(audio_response.content)
 
-        return filename, f"/download-audios/{filename}"
+        return f"/download-audios/{filename}"
