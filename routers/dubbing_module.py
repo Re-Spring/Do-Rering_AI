@@ -34,13 +34,13 @@ class Dubbing_voice_cloning:
             model="eleven_multilingual_v2"
         )
         # 생성된 오디오 파일 저장
-        output_filename = f"{self.audio_path}/{user_id}/{title}_{num+1}.wav"
-        output_path = Path(f"{self.audio_path}/{user_id}")
+        output_filename = f"{self.audio_path}/{user_id}/{title}/{title}_{num+1}Page.wav"
+        output_path = Path(f"{self.audio_path}/{user_id}/{title}")
 
         if not output_path.exists():
-            output_path.mkdir(parents = True)
+            output_path.mkdir(parents=True)
 
         with open(output_filename, 'wb') as audio_file:
             audio_file.write(audio)
 
-        return audio, user_voice_id, output_filename
+        return output_filename
