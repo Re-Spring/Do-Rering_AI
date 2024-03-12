@@ -1,8 +1,6 @@
 # 전체 동작할 로직 작성
 import os
 import json
-import sys
-import uuid
 
 import uvicorn
 from openai import OpenAI
@@ -22,6 +20,7 @@ from ai_modules.dubbing_module import Dubbing_voice_cloning
 from ai_modules.text_to_image import Text_to_image, T2I_generater_from_prompts
 from ai_modules.deepl_ai import Deepl_api
 from ai_modules.video_module import Video_module
+from db.controller.story_controller import StoryController
 
 
 # prompt key 값 가져오기
@@ -54,6 +53,7 @@ t2i_module = Text_to_image(api_key=STABILITY_KEY, image_font_path=image_font_pat
 t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
 deepl_module = Deepl_api(api_key=DEEPL_API_KEY)
 video_module = Video_module(video_path=config.video_path, audio_path=config.audio_path)
+story_controller = StoryController()
 
 
 # 필요한 엔드포인트
@@ -76,9 +76,11 @@ async def generate_story_endpoint(request: Request):
     request_data = await request.json()
     story_data = json.loads(story.body.decode('utf-8'))
 
-
     title = story_data["paragraph0"]
-    page1 = story_data["paragraph1"]
+    voice = request_data["voice"]
+    genre = request_data["genre"]
+    user_id = request_data["userId"]
+    user_code = request_data["userCode"]
 
     # 이야기 데이터의 총 길이(단락 수)를 계산합니다.
     len_story = len(story_data)
@@ -93,20 +95,18 @@ async def generate_story_endpoint(request: Request):
     # 번역된 결과에서 텍스트만 추출하여 리스트로 저장합니다.
     english_prompts = [english_prompts[i].text for i in range(len(english_prompts))]
 
+    summary_prompts = ""
+    for i in range(1, 3):
+        summary_prompts += english_prompts[i]
+
     # 영어로 번역된 단락들을 이미지로 변환하는 모듈을 호출합니다.
-    # t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts)
+    # t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts, title=title)
 
     main_image_paths = (
         t2i_prompt_module.generate_images_from_prompts(
-            english_prompts=english_prompts, korean_prompts=korean_prompts, title=title)
+            english_prompts=english_prompts, korean_prompts=korean_prompts, title=title, user_id=user_id)
     )
 
-    # Dubbing 파트(voiceCloning/dubbing)
-    # "echo" 부분의 voice 입력 받을 수 있도록 할 예정
-    # 요청 데이터에서 'voice' 파라미터를 추출합니다.
-    voice = request_data["voice"]
-
-    # 오디오 파일 생성 및 경로 저장
     audio_paths = []
 
     # 사용자가 설정한 목소리가 'myVoice'가 아닌 경우, AI가 제공하는 목소리로 음성 파일을 생성합니다.
@@ -117,7 +117,7 @@ async def generate_story_endpoint(request: Request):
             # 현재 페이지를 지정합니다.
             page = f"paragraph{i}"
             # AI 음성 모듈을 사용하여 음성 파일을 생성합니다.
-            audio_file_path = ai_voice_module.generate_audio_file(voice, story_data[page], title, i + 1)
+            audio_file_path = ai_voice_module.generate_audio_file(voice, story_data[page], title, i + 1, user_id=user_id)
             audio_paths.append(audio_file_path)
     else:
         # 'myVoice'가 선택된 경우, 사용자의 목소리로 음성을 복제하여 음성 파일을 생성합니다.
@@ -126,7 +126,6 @@ async def generate_story_endpoint(request: Request):
             print(f"페이지 {i + 1}번째 음성파일 생성중")
             # 현재 페이지를 지정합니다.
             page = f"paragraph{i}"
-            user_id = "hj1234"
             # 사용자의 목소리로 음성을 복제하는 모듈을 호출합니다.
             audio_file_path = clone_dubbing_module.generate_audio(title, story_data[page], user_id=user_id, num=i)
             audio_paths.append(audio_file_path)
@@ -136,10 +135,7 @@ async def generate_story_endpoint(request: Request):
     video_paths = []
 
     for i in range(0, len_story):
-        if not user_id:
-            audio_name = f"{title}/{title}_{i+1}Page.wav"
-        else:
-            audio_name = f"{user_id}/{title}/{title}_{i+1}Page.wav"
+        audio_name = f"{user_id}/{title}/{title}_{i+1}Page.wav"
         print("audio_name : ", audio_name)
         print("get_audio_length 들어감")
         audio_len = video_module.get_audio_length(audio_name=audio_name)
@@ -150,6 +146,13 @@ async def generate_story_endpoint(request: Request):
 
     print("for문 나옴")
     video_module.concatenate_videos(video_paths=video_paths, title=title)
+
+    story_summmary = await llm_module.summary_story(english_prompts=summary_prompts)
+    story_summmary = json.loads(story_summmary.body.decode('utf-8'))
+    print("story_summary : ", story_summmary)
+    data = [user_code, story_summmary, title, genre, main_image_paths[0]]
+
+    story_controller.insert_story_controller(data)
 
     return story
 

@@ -156,4 +156,74 @@ In the process of generating the fairy tale, please move to Step 3 on the condit
             else:
                 raise HTTPException(status_code=500, detail="Story generation failed.")
 
+    async def summary_story(self, english_prompts):
 
+        print("summary_story 들어옴")
+        print("engilsh_prompts : ", english_prompts)
+
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "model": "gpt-4-turbo-preview",
+            "messages" : [
+                {
+                    "role": "system", "content": """ 
+                    # Role
+                    - Your role is to summarize the contents of the fairy tale you received.
+                    
+                    # Output Format
+                    {
+                        summary : {summary}
+                    }
+                    
+                    # Task
+                    - Please summarize according to the conditions given
+                                        
+                    # Condition 1
+                    - Please make sure that the number of tokens in the summary value does not exceed 100..
+                    
+                    # Condition 2
+                    - When summarizing the content, please be aware that the content was only entered in the middle and summarize it.
+                    
+                    # Condition 3
+                    - Summarize the content briefly, and at the end of the day, finish it in a question format curious to see what the latter part will look like.
+                    
+                    # Condition 4
+                    - Please make sure that the title does not come up when you print it out as the result value.
+                    """,
+                    "role": "user", "content": f"""
+                    - Please summarize the contents of the fairy tale and return it to Korean.
+                    - Please don't use formal phrases such as "summary of fairy tales" when printing.
+                    
+                    # fairytale : {english_prompts}
+                    """
+                }
+            ],
+            "max_tokens": 3000,
+            "temperature": 1,
+            "n": 1,
+        }
+
+        timeout = httpx.Timeout(300.0, connect=300.0)
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post('https://api.openai.com/v1/chat/completions', json=payload, headers=headers)
+
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail=response.text)
+
+            result = response.json()
+            choice = result['choices'][0]
+
+            if 'message' in choice and 'content' in choice['message']:
+                summary_text = choice['message']['content']
+
+            print(summary_text)
+
+            if summary_text:
+                return JSONResponse(content=summary_text)
+            else:
+                raise HTTPException(status_code=500, detail="Story generation failed.")
