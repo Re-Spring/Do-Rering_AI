@@ -6,8 +6,9 @@ def create_db_connection():
     config = {
         'user': 'respring',
         'password': 'ReSpring3',
-        'host': '192.168.0.41:3306',
-        'database': 'rering',
+        'host': '192.168.0.41',
+        'port': 3306,
+        'database': 'dorering',
         'raise_on_warnings': True
     }
     try:
