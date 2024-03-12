@@ -25,6 +25,11 @@ class Dubbing_voice_cloning:
         user_voice_id = next((voice["voice_id"] for voice in self.cloned_voices if voice["name"] == user_id), None)
         if user_voice_id is None:
             raise ValueError("Invalid user ID")
+        output_filename = f"{self.audio_path}/{user_id}/{title}/{title}_{num + 1}Page.wav"
+        output_path = Path(f"{self.audio_path}/{user_id}/{title}")
+
+        if not output_path.exists():
+            output_path.mkdir(parents=True)
 
         # 텍스트를 음성으로 변환
         audio = generate(
@@ -33,12 +38,6 @@ class Dubbing_voice_cloning:
             voice=user_voice_id,
             model="eleven_multilingual_v2"
         )
-        # 생성된 오디오 파일 저장
-        output_filename = f"{self.audio_path}/{user_id}/{title}/{title}_{num+1}Page.wav"
-        output_path = Path(f"{self.audio_path}/{user_id}/{title}")
-
-        if not output_path.exists():
-            output_path.mkdir(parents=True)
 
         with open(output_filename, 'wb') as audio_file:
             audio_file.write(audio)

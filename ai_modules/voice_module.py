@@ -12,21 +12,20 @@ class Voice_synthesizer:
         self.client = OpenAI(api_key=self.api_key)
         self.audio_path = audio_path
 
-    def generate_audio_file(self, voice: str, script: str, title: str, page):
+    def generate_audio_file(self, voice: str, script: str, title: str, page, user_id):
         now = datetime.now()
-        filename = title + f"_{page}Page" + ".wav"
-        audio_path = Path(os.path.join(self.audio_path, title))
-        audio_file_path = os.path.join(str(audio_path), filename)
+        filename = f"{user_id}/{title}/{title}_{page}Page" + ".wav"
+        audio_path = Path(os.path.join(self.audio_path, f"{user_id}/{title}"))
+        audio_file_path = os.path.join(self.audio_path, filename)
+
+        if not audio_path.exists():
+            audio_path.mkdir(parents = True)
         
         audio_response = self.client.audio.speech.create(
             model="tts-1",
             voice=voice,
             input=script,
         )
-
-
-        if not audio_path.exists():
-            audio_path.mkdir(parents = True)
 
         with open(audio_file_path, "wb") as audio_file:
             audio_file.write(audio_response.content)
