@@ -15,13 +15,13 @@ import config
 # Module import
 from config import STABILITY_KEY, image_path, image_font_path, DEEPL_API_KEY, audio_path
 
-from routers.large_language_model_module import Large_language_model_module
-from routers.voice_module import Voice_synthesizer
-from routers.voice_cloning_module import Voice_cloning
-from routers.dubbing_module import Dubbing_voice_cloning
-from routers.text_to_image import Text_to_image, T2I_generater_from_prompts
-from routers.deepl_ai import Deepl_api
-from routers.video_module import Video_module
+from ai_modules.large_language_model_module import Large_language_model_module
+from ai_modules.voice_module import Voice_synthesizer
+from ai_modules.voice_cloning_module import Voice_cloning
+from ai_modules.dubbing_module import Dubbing_voice_cloning
+from ai_modules.text_to_image import Text_to_image, T2I_generater_from_prompts
+from ai_modules.deepl_ai import Deepl_api
+from ai_modules.video_module import Video_module
 
 
 # prompt key 값 가져오기
@@ -75,16 +75,13 @@ async def generate_story_endpoint(request: Request):
     # 생성된 이야기를 JSON 형식에서 파싱합니다.
     request_data = await request.json()
     story_data = json.loads(story.body.decode('utf-8'))
-    print("요청 데이터 : ", request_data)
-    print("스토리 완성")
+
 
     title = story_data["paragraph0"]
     page1 = story_data["paragraph1"]
 
     # 이야기 데이터의 총 길이(단락 수)를 계산합니다.
     len_story = len(story_data)
-    print(page1)
-    print(len(story_data))
 
     # 한국어로 된 모든 단락을 리스트로 생성합니다.
     korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
@@ -103,7 +100,6 @@ async def generate_story_endpoint(request: Request):
         t2i_prompt_module.generate_images_from_prompts(
             english_prompts=english_prompts, korean_prompts=korean_prompts, title=title)
     )
-    print("main_image_paths : ", main_image_paths)
 
     # Dubbing 파트(voiceCloning/dubbing)
     # "echo" 부분의 voice 입력 받을 수 있도록 할 예정

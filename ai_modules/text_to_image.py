@@ -73,9 +73,10 @@ class Text_to_image:
     def save_image(self, img: Image.Image, title: str ) -> str:
         # 이미지를 지정된 경로에 저장하는 함수입니다.
         timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        img_path = f"{title}"
+        img_path = f"{title}/{title}"
         img_filepath = Path(os.path.join(self.image_folder, img_path))
-        img_filename = os.path.join(self.image_folder, f"{title}_{timestamp}.png")
+        filename = f"{title}/{title}_{timestamp}.png"
+        img_filename = os.path.join(self.image_folder, filename)
         if img_filepath.exists():
             img_filepath.mkdir(parents = True)
         img.save(img_filename)
