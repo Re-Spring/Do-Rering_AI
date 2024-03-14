@@ -4,10 +4,11 @@ import json
 
 import uvicorn
 from openai import OpenAI
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, File, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from starlette.responses import JSONResponse
 
 import config
 # Module import
@@ -15,7 +16,7 @@ from config import STABILITY_KEY, image_path, image_font_path, DEEPL_API_KEY, au
 
 from ai_modules.large_language_model_module import Large_language_model_module
 from ai_modules.voice_module import Voice_synthesizer
-from ai_modules.voice_cloning_module import Voice_cloning
+from ai_modules.voice_cloning_module import Voice_cloning_module
 from ai_modules.dubbing_module import Dubbing_voice_cloning
 from ai_modules.text_to_image import Text_to_image, T2I_generater_from_prompts
 from ai_modules.deepl_ai import Deepl_api
@@ -47,7 +48,7 @@ app.add_middleware(
 # 인스턴스 생성
 llm_module = Large_language_model_module(api_key=OPEN_API_KEY)
 ai_voice_module = Voice_synthesizer(api_key=OPEN_API_KEY, audio_path=audio_path)
-voice_cloning_module = Voice_cloning(api_key=VOICE_CLONING_API_KEY)
+voice_cloning = Voice_cloning_module(api_key=VOICE_CLONING_API_KEY)
 clone_dubbing_module = Dubbing_voice_cloning(api_key=VOICE_CLONING_API_KEY, audio_path=audio_path)
 t2i_module = Text_to_image(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
 t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
@@ -160,8 +161,30 @@ async def generate_story_endpoint(request: Request):
 @app.post("/voiceCloning")
 async def generate_voice_cloning_endpoint(request: Request):
     print("voiceCloning ENDpoint 들어옴")
-    # voice_cloning_module : 학습
-    return request
+
+    form = await request.json()
+    user_id = form.get('userId')
+    files = form.getlist('files')
+
+    # 업로드된 파일 처리
+    saved_files = []
+    for file in files:
+        content = await file.read()
+        temp_file_name, error = voice_cloning.process_audio(content)
+        if error:
+            print(f"An error occurred at process_audio : {str(error)}")
+            return JSONResponse(status_code=400, content={"message": error})
+        saved_files.append(temp_file_name)
+
+    # 파일들을 모두 처리한 후 clone_voice 호출
+    user_voice_id = voice_cloning.clone_voice(user_id, saved_files)
+    if not user_voice_id:
+        return JSONResponse(status_code=500, content={"message": "오류가 발생했습니다"})
+
+    return JSONResponse(status_code=200, content={"userVoiceId": user_voice_id})
+
+
+
 
 # 서버 자동 실행 ( 파이썬은 포트 8002 쓸거임 )
 if __name__ == "__main__":
