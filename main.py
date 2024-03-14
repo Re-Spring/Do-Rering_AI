@@ -1,13 +1,16 @@
 # 전체 동작할 로직 작성
+import asyncio
 import os
 import json
 
 import uvicorn
 from openai import OpenAI
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from starlette.websockets import WebSocket, WebSocketDisconnect
+import asyncio
 
 import config
 # Module import
@@ -55,45 +58,38 @@ deepl_module = Deepl_api(api_key=DEEPL_API_KEY)
 video_module = Video_module(video_path=config.video_path, audio_path=config.audio_path)
 story_controller = StoryController()
 
+connected_websockets = []
 
-# 필요한 엔드포인트
-# 1. 동화 생성 엔드포인트 -> 이야기 생성 + 이미지 생성 + 더빙 + 앞에 내용을 기반으로 동영상으로 동화 생성
-# 2. 목소리 voice_cloning 학습 엔드포인트
-
-
-# 동화 생성 엔드포인트
-# 매개 변수에 voice 추가
-@app.post("/generateStory")
-async def generate_story_endpoint(request: Request):
+async def generate_story(data: json):
     # 요청이 들어왔을 때의 로그를 출력합니다.
-    print("엔드포인트 들어옴")
+    print("generate_story 들어옴")
     # LLM_module의 generate_story 함수를 호출하여 응답을 story 변수에 저장
-    story = await llm_module.generate_story(request)
+    story = await llm_module.generate_story(data)
 
     # 요청 데이터를 JSON 형식으로 변환합니다.
     # story_response에서 JSON 데이터를 추출
     # 생성된 이야기를 JSON 형식에서 파싱합니다.
-    request_data = await request.json()
+    # data = await data.json()
     story_data = json.loads(story.body.decode('utf-8'))
 
     title = story_data["paragraph0"]
-    voice = request_data["voice"]
-    genre = request_data["genre"]
-    user_id = request_data["userId"]
-    user_code = request_data["userCode"]
+    voice = data["voice"]
+    genre = data["genre"]
+    user_id = data["userId"]
+    user_code = data["userCode"]
 
     # 이야기 데이터의 총 길이(단락 수)를 계산합니다.
     len_story = len(story_data)
-
+    print("len : ", len_story)
     # 한국어로 된 모든 단락을 리스트로 생성합니다.
-    korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
+    korean_prompts = [story_data["paragraph" + str(i)] for i in range(0, len_story)]
     print("korean_prompts", korean_prompts)
 
     # Deepl 모듈을 사용하여 한국어 단락을 영어로 번역합니다.
     english_prompts = deepl_module.translate_text(text=korean_prompts, target_lang="EN-US")
 
     # 번역된 결과에서 텍스트만 추출하여 리스트로 저장합니다.
-    english_prompts = [english_prompts[i].text for i in range(len(english_prompts))]
+    english_prompts = [english_prompts[i].text for i in range(0, len(english_prompts))]
 
     summary_prompts = ""
     for i in range(1, 3):
@@ -106,9 +102,8 @@ async def generate_story_endpoint(request: Request):
         t2i_prompt_module.generate_images_from_prompts(
             english_prompts=english_prompts, korean_prompts=korean_prompts, title=title, user_id=user_id)
     )
-
     audio_paths = []
-
+    print("main_image 끝")
     # 사용자가 설정한 목소리가 'myVoice'가 아닌 경우, AI가 제공하는 목소리로 음성 파일을 생성합니다.
     if (voice != "myVoice"):
         for i in range(0, len_story):
@@ -130,7 +125,7 @@ async def generate_story_endpoint(request: Request):
             audio_file_path = clone_dubbing_module.generate_audio(title, story_data[page], user_id=user_id, num=i)
             audio_paths.append(audio_file_path)
 
-    print("audio_paths : ", audio_paths)
+    print("voice 끝")
 
     video_paths = []
 
@@ -144,7 +139,7 @@ async def generate_story_endpoint(request: Request):
         video_path = video_module.generate_video(page=i+1, title=title, image_path=main_image_paths[i], audio_path=audio_paths[i], audio_length=audio_len)
         video_paths.append(video_path)
 
-    print("for문 나옴")
+    print("오디오 생성 완료")
     video_module.concatenate_videos(video_paths=video_paths, title=title)
 
     story_summmary = await llm_module.summary_story(english_prompts=summary_prompts)
@@ -152,9 +147,11 @@ async def generate_story_endpoint(request: Request):
     print("story_summary : ", story_summmary)
     data = [user_code, story_summmary, title, genre, main_image_paths[0]]
 
+    print("생성 완료")
     story_controller.insert_story_controller(data)
+    print("insert까지 끝")
 
-    return story
+    return {"message" : "즐거운 동화 생성을 시작했어요~ 완료되면 알려드릴게요!"}
 
 # 목소리 voice_cloning 학습 엔드포인트
 @app.post("/voiceCloning")
@@ -163,40 +160,38 @@ async def generate_voice_cloning_endpoint(request: Request):
     # voice_cloning_module : 학습
     return request
 
+# BackgroundTask을 이용해서 chrome브라우저로 Task 완료시 알림보내기
+# @app.post("/generateStory")
+# async def generate_story_endpoint(background_tasks: BackgroundTasks, request: Request):
+#     print("일단 여기 들어옴")
+#     while True:
+#         background_tasks.add_task((generate_story(request)))
+#     yield "data: 동화생성이 완료되었습니다.\n\n"
+
+# @app.get("/complete")
+# async def get_complete():
+#     return "complete"
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket, background_task: BackgroundTasks):
+    print("web 소켓 뚫음")
+    await websocket.accept()
+    connected_websockets.append(websocket)
+    try:
+        while True:
+            message = await websocket.receive_text()
+            print("message : ", message)
+            data = json.loads(message)
+            if data:
+                asyncio.create_task(generate_story(data))
+    except WebSocketDisconnect:
+        print("WebSocket connection disconnected")
+        connected_websockets.remove(websocket)
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
+
+
 # 서버 자동 실행 ( 파이썬은 포트 8002 쓸거임 )
 if __name__ == "__main__":
     uvicorn.run("main:app", port=8002, reload=True)
 
-
-    # # 오디오 파일 중 하나를 비디오에 사용할 오디오로 선택
-    # print("audio_paths : ", audio_paths)
-    # selected_audio_path = audio_paths \
-    #     if audio_paths else None
-    # print("selected_audio_path : ", selected_audio_path)
-
-
-    #
-    # # 각 페이지 별 동화를 영상화 -> 페이지가 6개다. -> 영상 6개
-    # # audios + image + text -> page 별 영상 1~6p
-    # # 각 페이지 별 영상을 합침 -> 동화 완성
-    #
-    # return story
-    # return await llm_module.generate_story(request)
-
-    # 최종 비디오 파일 경로 설정
-    # output_video_dir = os.path.join("", "videos")
-    # os.makedirs(output_video_dir, exist_ok=True)
-    # output_video_path = os.path.join(output_video_dir, f"{uuid.uuid4()}.wav")  # 고유한 파일명을 위해 uuid 사용
-    #
-    # # 이미지와 오디오 데이터를 사용해 비디오 생성
-    # if selected_audio_path:
-    #     generate_video_with_images_and_text(
-    #         image_paths=main_image_paths,
-    #         audio_path=selected_audio_path,
-    #         output_video_path=output_video_path,
-    #         fps=24
-    #     )
-    #
-    # # 비디오 생성 결과 반환 (예: URL 반환)
-    # video_url = f"/movies/{os.path.basename(output_video_path)}"
-    # return {"video_url": video_url}
