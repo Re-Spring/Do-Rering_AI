@@ -66,7 +66,7 @@ story_controller = StoryController()
 @app.post("/generateStory")
 async def generate_story_endpoint(request: Request):
     # 요청이 들어왔을 때의 로그를 출력합니다.
-    print("엔드포인트 들어옴")
+    print("요청 데이터 확인 : " , request)
     # LLM_module의 generate_story 함수를 호출하여 응답을 story 변수에 저장
     story = await llm_module.generate_story(request)
 
@@ -74,6 +74,7 @@ async def generate_story_endpoint(request: Request):
     # story_response에서 JSON 데이터를 추출
     # 생성된 이야기를 JSON 형식에서 파싱합니다.
     request_data = await request.json()
+    print("request_data : ", request_data)
     story_data = json.loads(story.body.decode('utf-8'))
 
     title = story_data["paragraph0"]
@@ -87,25 +88,15 @@ async def generate_story_endpoint(request: Request):
 
     # 한국어로 된 모든 단락을 리스트로 생성합니다.
     korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
-    print("korean_prompts", korean_prompts)
 
     # Deepl 모듈을 사용하여 한국어 단락을 영어로 번역합니다.
     english_prompts = deepl_module.translate_text(text=korean_prompts, target_lang="EN-US")
-
     # 번역된 결과에서 텍스트만 추출하여 리스트로 저장합니다.
     english_prompts = [english_prompts[i].text for i in range(len(english_prompts))]
 
     summary_prompts = ""
     for i in range(1, 3):
         summary_prompts += english_prompts[i]
-
-    # 영어로 번역된 단락들을 이미지로 변환하는 모듈을 호출합니다.
-    # t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts, title=title)
-
-    main_image_paths = (
-        t2i_prompt_module.generate_images_from_prompts(
-            english_prompts=english_prompts, korean_prompts=korean_prompts, title=title, user_id=user_id)
-    )
 
     audio_paths = []
 
@@ -116,6 +107,7 @@ async def generate_story_endpoint(request: Request):
             print(f"페이지 {i + 1}번째 음성파일 생성중")
             # 현재 페이지를 지정합니다.
             page = f"paragraph{i}"
+            user_id = f"hj1234"
             # AI 음성 모듈을 사용하여 음성 파일을 생성합니다.
             audio_file_path = ai_voice_module.generate_audio_file(voice, story_data[page], title, i + 1, user_id=user_id)
             audio_paths.append(audio_file_path)
@@ -131,6 +123,20 @@ async def generate_story_endpoint(request: Request):
             audio_paths.append(audio_file_path)
 
     print("audio_paths : ", audio_paths)
+
+    # 영어로 번역된 단락들을 이미지로 변환하는 모듈을 호출합니다.
+    # t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts, title=title)
+
+    eng_title = english_prompts.pop(0)
+    kor_title = korean_prompts.pop(0)
+
+    print(f"영어 제목[0]번 인덱스 : {eng_title}")
+    eng_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title = eng_title, title=title, user_id=user_id)
+
+    main_image_paths = (
+        t2i_prompt_module.story_images_from_prompts(
+            english_prompts=english_prompts, korean_prompts=korean_prompts, title=title, user_id=user_id)
+    )
 
     video_paths = []
 
@@ -153,6 +159,7 @@ async def generate_story_endpoint(request: Request):
     data = [user_code, story_summmary, title, genre, main_image_paths[0]]
 
     story_controller.insert_story_controller(data)
+
 
     return story
 
