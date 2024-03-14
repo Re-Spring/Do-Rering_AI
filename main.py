@@ -66,14 +66,19 @@ connected_websockets = []
 
 async def generate_story(data: json):
     # 요청이 들어왔을 때의 로그를 출력합니다.
+
+  
+
     print("generate_story 들어옴")
+
     # LLM_module의 generate_story 함수를 호출하여 응답을 story 변수에 저장
     story = await llm_module.generate_story(data)
 
     # 요청 데이터를 JSON 형식으로 변환합니다.
     # story_response에서 JSON 데이터를 추출
     # 생성된 이야기를 JSON 형식에서 파싱합니다.
-    # data = await data.json()
+
+
     story_data = json.loads(story.body.decode('utf-8'))
 
     title = story_data["paragraph0"]
@@ -86,12 +91,14 @@ async def generate_story(data: json):
     len_story = len(story_data)
     print("len : ", len_story)
     # 한국어로 된 모든 단락을 리스트로 생성합니다.
-    korean_prompts = [story_data["paragraph" + str(i)] for i in range(0, len_story)]
-    print("korean_prompts", korean_prompts)
+
+    korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
+
+    
+
 
     # Deepl 모듈을 사용하여 한국어 단락을 영어로 번역합니다.
     english_prompts = deepl_module.translate_text(text=korean_prompts, target_lang="EN-US")
-
     # 번역된 결과에서 텍스트만 추출하여 리스트로 저장합니다.
     english_prompts = [english_prompts[i].text for i in range(0, len(english_prompts))]
 
@@ -99,13 +106,7 @@ async def generate_story(data: json):
     for i in range(1, 3):
         summary_prompts += english_prompts[i]
 
-    # 영어로 번역된 단락들을 이미지로 변환하는 모듈을 호출합니다.
-    # t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts, title=title)
 
-    main_image_paths = (
-        t2i_prompt_module.generate_images_from_prompts(
-            english_prompts=english_prompts, korean_prompts=korean_prompts, title=title, user_id=user_id)
-    )
     audio_paths = []
     print("main_image 끝")
     # 사용자가 설정한 목소리가 'myVoice'가 아닌 경우, AI가 제공하는 목소리로 음성 파일을 생성합니다.
@@ -115,6 +116,7 @@ async def generate_story(data: json):
             print(f"페이지 {i + 1}번째 음성파일 생성중")
             # 현재 페이지를 지정합니다.
             page = f"paragraph{i}"
+            user_id = f"hj1234"
             # AI 음성 모듈을 사용하여 음성 파일을 생성합니다.
             audio_file_path = ai_voice_module.generate_audio_file(voice, story_data[page], title, i + 1, user_id=user_id)
             audio_paths.append(audio_file_path)
@@ -130,6 +132,20 @@ async def generate_story(data: json):
             audio_paths.append(audio_file_path)
 
     print("voice 끝")
+
+    # 영어로 번역된 단락들을 이미지로 변환하는 모듈을 호출합니다.
+    # t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts, title=title)
+
+    eng_title = english_prompts.pop(0)
+    kor_title = korean_prompts.pop(0)
+
+    print(f"영어 제목[0]번 인덱스 : {eng_title}")
+    eng_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title = eng_title, title=title, user_id=user_id)
+
+    main_image_paths = (
+        t2i_prompt_module.story_images_from_prompts(
+            english_prompts=english_prompts, korean_prompts=korean_prompts, title=title, user_id=user_id)
+    )
 
     video_paths = []
 
@@ -157,6 +173,7 @@ async def generate_story(data: json):
 
     return {"message" : "즐거운 동화 생성을 시작했어요~ 완료되면 알려드릴게요!"}
 
+
 # 목소리 voice_cloning 학습 엔드포인트
 @app.post("/voiceCloning")
 async def generate_voice_cloning_endpoint(request: Request):
@@ -182,21 +199,6 @@ async def generate_voice_cloning_endpoint(request: Request):
         return JSONResponse(status_code=500, content={"message": "오류가 발생했습니다"})
 
     return JSONResponse(status_code=200, content={"userVoiceId": user_voice_id})
-
-
-
-
-# BackgroundTask을 이용해서 chrome브라우저로 Task 완료시 알림보내기
-# @app.post("/generateStory")
-# async def generate_story_endpoint(background_tasks: BackgroundTasks, request: Request):
-#     print("일단 여기 들어옴")
-#     while True:
-#         background_tasks.add_task((generate_story(request)))
-#     yield "data: 동화생성이 완료되었습니다.\n\n"
-
-# @app.get("/complete")
-# async def get_complete():
-#     return "complete"
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, background_task: BackgroundTasks):
