@@ -7,7 +7,6 @@ import io
 import requests
 from elevenlabs.client import ElevenLabs
 from fastapi import UploadFile
-from db.controller.clone_controller import CloneController
 
 
 class Voice_cloning_module:
@@ -68,8 +67,6 @@ class Voice_cloning_module:
 
     async def clone_voice(self, user_id: str, files: list):
 
-        clone_controller = CloneController()
-
         client = ElevenLabs(
             api_key=self.api_key
         )
@@ -84,8 +81,6 @@ class Voice_cloning_module:
 
             user_voice_id = next((voice["voice_id"] for voice in self.cloned_voices if voice["name"] == user_id), None)
             print(user_voice_id)
-
-            clone_controller.update_voice_id_controller(user_id, user_voice_id)
 
             return user_voice_id
         except Exception as e:

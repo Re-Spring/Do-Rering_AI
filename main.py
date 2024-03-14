@@ -23,6 +23,7 @@ from ai_modules.text_to_image import Text_to_image, T2I_generater_from_prompts
 from ai_modules.deepl_ai import Deepl_api
 from ai_modules.video_module import Video_module
 from db.controller.story_controller import StoryController
+from db.controller.clone_controller import CloneController
 
 
 # prompt key 값 가져오기
@@ -56,6 +57,7 @@ t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font
 deepl_module = Deepl_api(api_key=DEEPL_API_KEY)
 video_module = Video_module(video_path=config.video_path, audio_path=config.audio_path)
 story_controller = StoryController()
+clone_controller = CloneController()
 
 
 # 필요한 엔드포인트
@@ -177,6 +179,8 @@ async def generate_voice_cloning_endpoint(user_id: str = Form(...), files: List[
     user_voice_id = await voice_cloning.clone_voice(user_id, saved_files)
     if not user_voice_id:
         return JSONResponse(status_code=500, content={"message": "An error occurred at clone_voice"})
+
+    clone_controller.update_voice_id_controller(user_id, user_voice_id)
 
     return JSONResponse(status_code=200, content={"userVoiceId": user_voice_id})
 
