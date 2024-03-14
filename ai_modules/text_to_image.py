@@ -96,14 +96,18 @@ class Text_to_image:
         # 이미지를 지정된 경로에 저장하는 함수입니다.
         img_path = f"{user_id}/{title}"
         img_filepath = Path(os.path.join(self.image_folder, img_path))
+
         filename = f"{user_id}/{title}/{title}{('_' + str(page) + 'Page') if page else ''}.png"
         img_filename = os.path.join(self.image_folder, filename)
+
 
         if not img_filepath.exists():
             img_filepath.mkdir(parents=True)
 
-        img.save(img_filename)
-        img_path = str(img_filename)
+       
+
+        img.save(filename)
+        img_path = str(filename)
         return img_path
 
 class T2I_generater_from_prompts:

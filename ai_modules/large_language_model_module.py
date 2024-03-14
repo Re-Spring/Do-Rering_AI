@@ -8,9 +8,8 @@ class Large_language_model_module:
     def __init__(self, api_key):
         self.api_key = api_key
 
-    async def generate_story(self, request: Request):
+    async def generate_story(self, data):
         # 클라이언트로부터 전송받은 JSON 데이터를 파싱합니다.
-        data = await request.json()
 
         keys_to_delete = []  # 삭제할 키를 저장할 빈 리스트 생성
 

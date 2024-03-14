@@ -1,7 +1,7 @@
 # voice_cloning.py
 from elevenlabs.client import ElevenLabs
 import requests
-from elevenlabs import generate
+# from elevenlabs import generate
 from pathlib import Path
 
 class Dubbing_voice_cloning:
@@ -31,9 +31,12 @@ class Dubbing_voice_cloning:
         if not output_path.exists():
             output_path.mkdir(parents=True)
 
+        client = ElevenLabs(
+            api_key=self.api_key
+        )
+
         # 텍스트를 음성으로 변환
-        audio = generate(
-            api_key=self.api_key,
+        audio = client.generate(
             text=story_text,
             voice=user_voice_id,
             model="eleven_multilingual_v2"
