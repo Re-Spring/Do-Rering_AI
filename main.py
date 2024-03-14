@@ -1,6 +1,7 @@
 # 전체 동작할 로직 작성
 import os
 import json
+from typing import List
 
 import uvicorn
 from openai import OpenAI
@@ -159,27 +160,23 @@ async def generate_story_endpoint(request: Request):
 
 # 목소리 voice_cloning 학습 엔드포인트
 @app.post("/voiceCloning")
-async def generate_voice_cloning_endpoint(request: Request):
+async def generate_voice_cloning_endpoint(user_id: str = Form(...), files: List[UploadFile] = File(...)):
     print("voiceCloning ENDpoint 들어옴")
-
-    form = await request.json()
-    user_id = form.get('userId')
-    files = form.getlist('files')
 
     # 업로드된 파일 처리
     saved_files = []
     for file in files:
-        content = await file.read()
-        temp_file_name, error = voice_cloning.process_audio(content)
+        # await 키워드를 추가하여 비동기 함수의 결과를 기다림
+        temp_file_name, error = await voice_cloning.process_audio(file)
         if error:
             print(f"An error occurred at process_audio : {str(error)}")
             return JSONResponse(status_code=400, content={"message": error})
         saved_files.append(temp_file_name)
 
     # 파일들을 모두 처리한 후 clone_voice 호출
-    user_voice_id = voice_cloning.clone_voice(user_id, saved_files)
+    user_voice_id = await voice_cloning.clone_voice(user_id, saved_files)
     if not user_voice_id:
-        return JSONResponse(status_code=500, content={"message": "오류가 발생했습니다"})
+        return JSONResponse(status_code=500, content={"message": "An error occurred at clone_voice"})
 
     return JSONResponse(status_code=200, content={"userVoiceId": user_voice_id})
 

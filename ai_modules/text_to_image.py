@@ -82,8 +82,8 @@ class Text_to_image:
             img_filepath.mkdir(parents=True)
 
         img.save(img_filename)
-        img_path = str(img_filename)
-        return img_path
+
+        return img_filename
 
 class T2I_generater_from_prompts:
     def __init__(self, api_key, image_font_path, image_path):
