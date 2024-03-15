@@ -2,6 +2,7 @@
 import asyncio
 import os
 import json
+from typing import List
 
 import uvicorn
 from openai import OpenAI
@@ -28,6 +29,7 @@ from ai_modules.text_to_image import Text_to_image, T2I_generater_from_prompts
 from ai_modules.deepl_ai import Deepl_api
 from ai_modules.video_module import Video_module
 from db.controller.story_controller import StoryController
+from db.controller.clone_controller import CloneController
 
 
 # prompt key 값 가져오기
@@ -61,6 +63,7 @@ t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font
 deepl_module = Deepl_api(api_key=DEEPL_API_KEY)
 video_module = Video_module(video_path=config.video_path, audio_path=config.audio_path)
 story_controller = StoryController()
+clone_controller = CloneController()
 
 connected_websockets = []
 
@@ -176,27 +179,25 @@ async def generate_story(data: json):
 
 # 목소리 voice_cloning 학습 엔드포인트
 @app.post("/voiceCloning")
-async def generate_voice_cloning_endpoint(request: Request):
+async def generate_voice_cloning_endpoint(user_id: str = Form(...), files: List[UploadFile] = File(...)):
     print("voiceCloning ENDpoint 들어옴")
-
-    form = await request.json()
-    user_id = form.get('userId')
-    files = form.getlist('files')
 
     # 업로드된 파일 처리
     saved_files = []
     for file in files:
-        content = await file.read()
-        temp_file_name, error = voice_cloning.process_audio(content)
+        # await 키워드를 추가하여 비동기 함수의 결과를 기다림
+        temp_file_name, error = await voice_cloning.process_audio(file)
         if error:
             print(f"An error occurred at process_audio : {str(error)}")
             return JSONResponse(status_code=400, content={"message": error})
         saved_files.append(temp_file_name)
 
     # 파일들을 모두 처리한 후 clone_voice 호출
-    user_voice_id = voice_cloning.clone_voice(user_id, saved_files)
+    user_voice_id = await voice_cloning.clone_voice(user_id, saved_files)
     if not user_voice_id:
-        return JSONResponse(status_code=500, content={"message": "오류가 발생했습니다"})
+        return JSONResponse(status_code=500, content={"message": "An error occurred at clone_voice"})
+
+    clone_controller.update_voice_id_controller(user_id, user_voice_id)
 
     return JSONResponse(status_code=200, content={"userVoiceId": user_voice_id})
 
