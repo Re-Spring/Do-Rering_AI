@@ -1,3 +1,4 @@
 
-†python:S930"gAdd 1 missing arguments; 'generate_video_with_images_and_text' expects at least 3 positional arguments.(ÿ şŸ8Ò…–İâ1
-Rpython:S930"3Remove this unexpected named argument 'audio_path'.(ÅÉó»8Ô…–İâ1
+Rpython:S1481ƒ"-Remove the unused local variable "kor_title".(•‰ñºúÿÿÿÿ8ÿ¥Â×ã1
+ypython:S1481†"3Remove the unused local variable "eng_image_paths".(Ã™³8ş“§¯ã1J$11337ade-287b-4bfb-92a5-e6f41e4fa1d9
+python:S3457n"EAdd replacement fields or use a normal string instead of an f-string.(ŸğĞıÿÿÿÿ8“Ÿ’Ôã1J$e9b78aaa-c73b-4aa4-a5d5-8cf1c0911d86
