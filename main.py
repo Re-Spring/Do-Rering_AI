@@ -163,6 +163,7 @@ async def generate_story(data: json):
         audio_len = video_module.get_audio_length(audio_name=audio_name)
         print("get_audio_length 나옴")
         print("audio_len : ", audio_len)
+        print("eng_image_paths : ", eng_image_paths)
         video_path = video_module.generate_video(page=i+1, title=title, image_path=main_image_paths[i], audio_path=audio_paths[i], audio_length=audio_len, eng_image_paths = eng_image_paths)
         video_paths.append(video_path)
 
