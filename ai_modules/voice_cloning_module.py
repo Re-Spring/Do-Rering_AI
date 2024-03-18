@@ -34,6 +34,7 @@ class Voice_cloning_module:
             return False
 
     async def process_audio(self, file: UploadFile):
+        print("process_audio 들어옴")
         audio_bytes = await file.read()
         audio_stream = io.BytesIO(audio_bytes)
 
@@ -66,6 +67,7 @@ class Voice_cloning_module:
         return tmpfile.name, None
 
     async def clone_voice(self, user_id: str, files: list):
+        print("clone_voice 들어옴")
 
         client = ElevenLabs(
             api_key=self.api_key
@@ -79,8 +81,11 @@ class Voice_cloning_module:
                 files=files,
             )
 
+            # 클론이 완료되면 클론된 보이스 목록을 다시 가져옴
+            self.cloned_voices = self.fetch_cloned_voices()
+
             user_voice_id = next((voice["voice_id"] for voice in self.cloned_voices if voice["name"] == user_id), None)
-            print(user_voice_id)
+            print("voice_id 확인 : ", user_voice_id)
 
             return user_voice_id
         except Exception as e:
