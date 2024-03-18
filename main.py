@@ -67,8 +67,6 @@ connected_websockets = []
 async def generate_story(data: json):
     # 요청이 들어왔을 때의 로그를 출력합니다.
 
-  
-
     print("generate_story 들어옴")
 
     # LLM_module의 generate_story 함수를 호출하여 응답을 story 변수에 저장
@@ -94,13 +92,16 @@ async def generate_story(data: json):
 
     korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
 
-    
-
-
     # Deepl 모듈을 사용하여 한국어 단락을 영어로 번역합니다.
     english_prompts = deepl_module.translate_text(text=korean_prompts, target_lang="EN-US")
     # 번역된 결과에서 텍스트만 추출하여 리스트로 저장합니다.
     english_prompts = [english_prompts[i].text for i in range(0, len(english_prompts))]
+
+    no_title_ko_pmt = []
+    no_title_eng_pmt = []
+    for i in range(1, len_story):
+        no_title_ko_pmt.append(korean_prompts[i])
+        no_title_eng_pmt.append(english_prompts[i])
 
     summary_prompts = ""
     for i in range(1, 3):
@@ -116,7 +117,6 @@ async def generate_story(data: json):
             print(f"페이지 {i + 1}번째 음성파일 생성중")
             # 현재 페이지를 지정합니다.
             page = f"paragraph{i}"
-            user_id = f"hj1234"
             # AI 음성 모듈을 사용하여 음성 파일을 생성합니다.
             audio_file_path = ai_voice_module.generate_audio_file(voice, story_data[page], title, i + 1, user_id=user_id)
             audio_paths.append(audio_file_path)
@@ -136,19 +136,23 @@ async def generate_story(data: json):
     # 영어로 번역된 단락들을 이미지로 변환하는 모듈을 호출합니다.
     # t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts, title=title)
 
-    eng_title = english_prompts.pop(0)
-    kor_title = korean_prompts.pop(0)
+    eng_title = english_prompts[0]
+    print("eng_title : ", eng_title)
 
-    print(f"영어 제목[0]번 인덱스 : {eng_title}")
     eng_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title = eng_title, title=title, user_id=user_id)
 
-    main_image_paths = (
-        t2i_prompt_module.story_images_from_prompts(
-            english_prompts=english_prompts, korean_prompts=korean_prompts, title=title, user_id=user_id)
-    )
-
+    print(f"한국 prompt 길이  : {len(no_title_ko_pmt)}")
+    main_image_paths = (t2i_prompt_module.story_images_from_prompts(
+            no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id))
+    print(f"메인 이미지 경로는 무엇인가 ? : {main_image_paths}")
+    # main_image_paths = (
+    #     t2i_prompt_module.story_images_from_prompts(
+    #         no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id)
+    # )
+    #
     video_paths = []
 
+    # len_story = min(len(main_image_paths), len(audio_paths))  # 최소 길이를 기준으로 반복
     for i in range(0, len_story):
         audio_name = f"{user_id}/{title}/{title}_{i+1}Page.wav"
         print("audio_name : ", audio_name)
@@ -156,7 +160,7 @@ async def generate_story(data: json):
         audio_len = video_module.get_audio_length(audio_name=audio_name)
         print("get_audio_length 나옴")
         print("audio_len : ", audio_len)
-        video_path = video_module.generate_video(page=i+1, title=title, image_path=main_image_paths[i], audio_path=audio_paths[i], audio_length=audio_len)
+        video_path = video_module.generate_video(page=i+1, title=title, image_path=main_image_paths[i], audio_path=audio_paths[i], audio_length=audio_len, eng_image_paths = eng_image_paths)
         video_paths.append(video_path)
 
     print("오디오 생성 완료")

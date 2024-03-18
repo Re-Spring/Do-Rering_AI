@@ -1,3 +1,4 @@
 
-¨python:S101"fRename class "Video_module" to match the regular expression ^_?([A-Z_][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$.(ÍµÊµşÿÿÿÿJ$7d2117e6-f826-47ef-812c-947bddce170b
-=python:S125"Remove this commented out code.(Â‘³ë8ãÆ×ã1
+¨python:S101"fRename class "Video_module" to match the regular expression ^_?([A-Z_][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$.(ÍµÊµşÿÿÿÿJ$03350661-9a81-41f1-ae60-6995523c9c8d
+|python:S1172"7Remove the unused function parameter "eng_image_paths".(€Ä¹À8™‡ÜÙã1J$23a513ff-cdb7-4bd6-9b32-85d6a151d67b
+cpython:S125"Remove this commented out code.(Â‘³ë8ãÆ×ã1J$03132378-d23b-40ca-b8ee-267484df79b5
