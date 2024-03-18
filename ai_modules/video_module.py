@@ -21,7 +21,7 @@ class Video_module:
 
             return 0
 
-    def generate_video(self, page, title, image_path, audio_path, audio_length, eng_image_paths):
+    def generate_video(self, page, title, image_path, audio_path, audio_length):
         output_video_path = os.path.join(str(self.video_path), f"{title}_{page}.mp4")
         fps = 24
         try:
