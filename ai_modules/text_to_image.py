@@ -68,7 +68,7 @@ class Text_to_image:
                     img_with_text = self.add_text_to_image(img, title)
                     image_path = self.save_image(img_with_text, title, user_id)
                     print(f"타이틀 생성 종료 ====================== {seed}")
-                    return img, seed,image_path  # Return the PIL.Image object directly
+                    return img, seed, image_path  # Return the PIL.Image object directly
                     # return image_path
 
     def story_image(self, no_title_ko_pmt: str, no_title_eng_pmt: str, title: str, user_id, page: int) -> str:

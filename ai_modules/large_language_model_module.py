@@ -12,6 +12,7 @@ class Large_language_model_module:
         # 클라이언트로부터 전송받은 JSON 데이터를 파싱합니다.
 
         keys_to_delete = []  # 삭제할 키를 저장할 빈 리스트 생성
+        data = await data.json()
 
         for key, value in data.items():  # data.items()로 키-값 쌍들을 반복
             if value == "":  # 값이 빈 문자열인 경우
