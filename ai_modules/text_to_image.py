@@ -5,7 +5,6 @@ from ai_modules.deepl_ai import Deepl_api
 import random
 from PIL import Image, ImageDraw, ImageFont
 import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
-import hashlib
 import sys
 from stability_sdk import client
 from pathlib import Path
@@ -19,6 +18,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 sys.path.append(parent_dir)
 
+
 class Text_to_image:
     def __init__(self, api_key, image_font_path, image_path):
         self.api_key = api_key
@@ -29,16 +29,21 @@ class Text_to_image:
             verbose=True,
             engine="stable-diffusion-xl-1024-v1-0",
         )
+        self.fixed_seed = self.generate_fixed_seed()
 
     # 클래스가 초기화될 때 고정 시드 값을 설정합니다.
     def generate_fixed_seed(self):
         return random.randint(0, 2 ** 32 - 1)
 
-    def title_image(self, eng_title: str, title: str, user_id):
-        fixed_seed = self.generate_fixed_seed()
+    def title_image(self, eng_title: str, title: str, user_id) -> (Image.Image, int):
+        print(f"타이틀 생성 시작 =================== {title}")
+
+        seed = self.fixed_seed
+        print(f"Seed 값 ========== : {seed}")
+
         answers = self.stability_api.generate(
             prompt=f"Picture a fairy tale. Create a fairy tale for a seven-year-old to see {eng_title}",
-            seed=fixed_seed + 1,
+            seed=seed,
             steps=50,
             cfg_scale=9.0,
             width=1024,
@@ -56,15 +61,28 @@ class Text_to_image:
                     img = Image.open(io.BytesIO(artifact.binary))
                     img_with_text = self.add_text_to_image(img, title)
                     image_path = self.save_image(img_with_text, title, user_id)
-                    return image_path
+                    print(f"타이틀 생성 종료 ====================== {seed}")
+                    return img, seed,image_path  # Return the PIL.Image object directly
+                    # return image_path
 
-    def story_image(self, english_prompts: str ,korean_prompt: str, title: str, user_id, page):
-        # 프롬프트에 기반한 시드 값 생성
-        fixed_seed = self.generate_fixed_seed()
+    def story_image(self, no_title_ko_pmt: str, no_title_eng_pmt: str, title: str, user_id, page: int) -> str:
+        print(f"이야기 생성 시작 ========================{page}")
+
+        # title_image 함수의 반환값을 img_tuple에 할당합니다.
+        img_tuple = self.title_image(no_title_eng_pmt, title, user_id)
+        if img_tuple is None:
+            return None
+
+        # img_tuple에서 이미지 객체와 시드 값을 추출합니다.
+        img, seed, _ = img_tuple
+
+        print(f"타이틀에서 불러오는 이미지 : {img}")
+        print(f"사용되는 시드 값 : {seed}")
+
         answers = self.stability_api.generate(
-            prompt=f"""Take a children's book. Make a seven-year-old book for viewing. Draw according to the document below \n- {english_prompts}""",
-            # init_image=img,  # Assign our previously generated img as our Initial Image for transformation.
-            seed=fixed_seed,
+            prompt=f"""Take a children's book. Make a seven-year-old book for viewing. Draw according to the document below \n- {no_title_eng_pmt}""",
+            init_image=img,  # Assign our previously generated img as our Initial Image for transformation.
+            seed=seed,
             steps=50,
             cfg_scale=9.0,
             width=1024,
@@ -80,10 +98,12 @@ class Text_to_image:
                         "Please modify the prompt and try again.")
                 if artifact.type == generation.ARTIFACT_IMAGE:
                     img = Image.open(io.BytesIO(artifact.binary))
-                    img_with_text = self.add_text_to_image(img, korean_prompt)
+                    img_with_text = self.add_text_to_image(img, no_title_ko_pmt)
                     image_path = self.save_image(img_with_text, title, user_id, page)
+                    print(f"이야기 생성 종료 ========================{seed}")
                     return image_path
         return None
+
     # add_text_to_image() 및 save_image() 메서드는 이전과 동일합니다.
     def add_text_to_image(self, img: Image.Image, text: str, position: tuple = (10, 10), font_size: int = 25):
         # 이미지에 텍스트를 추가하는 함수입니다.
@@ -100,12 +120,10 @@ class Text_to_image:
         filename = f"{user_id}/{title}/{title}{('_' + str(page) + 'Page') if page else ''}.png"
         img_filename = os.path.join(self.image_folder, filename)
 
-
         if not img_filepath.exists():
             img_filepath.mkdir(parents=True)
 
         img.save(img_filename)
-
         return img_filename
 
 class T2I_generater_from_prompts:
@@ -114,26 +132,26 @@ class T2I_generater_from_prompts:
         self.image_font_path = image_font_path  # Path 객체를 문자열로 변환
         self.image_path = image_path  # Path 객체를 문자열로 변환
 
-    def story_images_from_prompts(self, english_prompts, korean_prompts, title, user_id):
+    def title_images_from_prompt(self, eng_title, title, user_id):
+        t2i_gen = Text_to_image(api_key=self.api_key, image_font_path=self.image_font_path, image_path=self.image_path)
+        img_path = t2i_gen.title_image(eng_title, title, user_id=user_id)
+        return img_path
+
+    def story_images_from_prompts(self, no_title_ko_pmt, no_title_eng_pmt, title, user_id):
         # Text_to_image 클래스의 인스턴스 생성
         t2i_gen = Text_to_image(api_key=self.api_key, image_font_path=self.image_font_path, image_path=self.image_path)
-        # 영어 프롬프트와 한국어 프롬프트를 반복하여 이미지 생성 함수에 전달
+
         image_paths = []  # 생성된 이미지 파일의 경로를 저장할 리스트
-        for i, prompt in enumerate(english_prompts):
+        for i, prompt in enumerate(no_title_ko_pmt):
             # 한국어 설명을 프롬프트와 함께 이미지 생성 함수에 전달합니다.
             # 이미지 생성 함수를 호출하여 이미지를 생성하고 해당 이미지의 경로를 받아옵니다.
+            print(f"이미지 생성 중 : {i}")
             page = i + 1
-            img_path = t2i_gen.story_image(english_prompts[i], korean_prompts[i], title, user_id = user_id, page = page)
+            img_path = t2i_gen.story_image(no_title_ko_pmt[i], no_title_eng_pmt[i], title, user_id=user_id, page=page)
             # 이미지 생성이 성공하면 이미지 경로를 출력하고, 실패하면 실패 메시지를 출력합니다.
             if img_path:
                 image_paths.append(img_path)  # 이미지 파일 경로를 리스트에 추가
                 print(f"Image for prompt {i} saved to {img_path}")
             else:
                 print(f"Failed to generate image for prompt {i}")
-        return image_paths  # 이미지 파일 경로 목록 반환
-    def title_images_from_prompt(self, eng_title, title,  user_id):
-        t2i_gen = Text_to_image(api_key=self.api_key, image_font_path=self.image_font_path, image_path=self.image_path)
-        img_path = t2i_gen.title_image(eng_title, title ,user_id = user_id)
-        return img_path
-
-
+        return image_paths  # 생성된 이미지 파일의 경로를 반환합니다.
