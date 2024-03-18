@@ -40,9 +40,15 @@ class Text_to_image:
 
         seed = self.fixed_seed
         print(f"Seed 값 ========== : {seed}")
+        positive_prompt = f"""
+        
+        "Imagine a fairy tale world that a seven-year-old child can see."
+        "Imagine a beautiful scene that matches the title: {eng_title}"
+        
+        """
 
         answers = self.stability_api.generate(
-            prompt=f"Picture a fairy tale. Create a fairy tale for a seven-year-old to see {eng_title}",
+            prompt=positive_prompt,
             seed=seed,
             steps=50,
             cfg_scale=9.0,
@@ -75,12 +81,14 @@ class Text_to_image:
 
         # img_tuple에서 이미지 객체와 시드 값을 추출합니다.
         img, seed, _ = img_tuple
-
-        print(f"타이틀에서 불러오는 이미지 : {img}")
-        print(f"사용되는 시드 값 : {seed}")
+        negative_prompt = f"""
+        
+        Create an image by changing the background without changing the protagonist of the image.: {no_title_eng_pmt}
+        
+        """
 
         answers = self.stability_api.generate(
-            prompt=f"""Take a children's book. Make a seven-year-old book for viewing. Draw according to the document below \n- {no_title_eng_pmt}""",
+            prompt=negative_prompt,
             init_image=img,  # Assign our previously generated img as our Initial Image for transformation.
             seed=seed,
             steps=50,
