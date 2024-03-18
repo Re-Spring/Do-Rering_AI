@@ -11,7 +11,6 @@ from fastapi import FastAPI, Request, BackgroundTasks, File, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from starlette.websockets import WebSocket, WebSocketDisconnect
 import asyncio
 
 from starlette.responses import JSONResponse
@@ -30,7 +29,6 @@ from ai_modules.deepl_ai import Deepl_api
 from ai_modules.video_module import Video_module
 from db.controller.story_controller import StoryController
 from db.controller.clone_controller import CloneController
-
 
 # prompt key 값 가져오기
 load_dotenv()
@@ -67,26 +65,19 @@ clone_controller = CloneController()
 
 connected_websockets = []
 
-async def generate_story(data: json):
-    # 요청이 들어왔을 때의 로그를 출력합니다.
-
+@app.post("/generateStory")
+async def generate_story(request: Request):
     print("generate_story 들어옴")
-
-    # LLM_module의 generate_story 함수를 호출하여 응답을 story 변수에 저장
-    story = await llm_module.generate_story(data)
-
-    # 요청 데이터를 JSON 형식으로 변환합니다.
-    # story_response에서 JSON 데이터를 추출
-    # 생성된 이야기를 JSON 형식에서 파싱합니다.
-
-
+    story = await llm_module.generate_story(request)
     story_data = json.loads(story.body.decode('utf-8'))
+    request_data = await request.json()
 
     title = story_data["paragraph0"]
-    voice = data["voice"]
-    genre = data["genre"]
-    user_id = data["userId"]
-    user_code = data["userCode"]
+    voice = request_data["voice"]
+    genre = request_data["genre"]
+    # user_id = request_data["userId"]
+    user_id = "hj1234"
+    user_code = request_data["userCode"]
 
     # 이야기 데이터의 총 길이(단락 수)를 계산합니다.
     len_story = len(story_data)
@@ -110,7 +101,6 @@ async def generate_story(data: json):
     for i in range(1, 3):
         summary_prompts += english_prompts[i]
 
-
     audio_paths = []
     print("main_image 끝")
     # 사용자가 설정한 목소리가 'myVoice'가 아닌 경우, AI가 제공하는 목소리로 음성 파일을 생성합니다.
@@ -121,7 +111,7 @@ async def generate_story(data: json):
             # 현재 페이지를 지정합니다.
             page = f"paragraph{i}"
             # AI 음성 모듈을 사용하여 음성 파일을 생성합니다.
-            audio_file_path = ai_voice_module.generate_audio_file(voice, story_data[page], title, i + 1, user_id=user_id)
+            audio_file_path = ai_voice_module.generate_audio_file(voice, story_data[page], title,i, user_id=user_id)
             audio_paths.append(audio_file_path)
     else:
         # 'myVoice'가 선택된 경우, 사용자의 목소리로 음성을 복제하여 음성 파일을 생성합니다.
@@ -134,7 +124,6 @@ async def generate_story(data: json):
             audio_file_path = clone_dubbing_module.generate_audio(title, story_data[page], user_id=user_id, num=i)
             audio_paths.append(audio_file_path)
 
-    print("voice 끝")
 
     # 영어로 번역된 단락들을 이미지로 변환하는 모듈을 호출합니다.
     # t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts, title=title)
@@ -142,7 +131,7 @@ async def generate_story(data: json):
     eng_title = english_prompts[0]
     print("eng_title : ", eng_title)
 
-    eng_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title = eng_title, title=title, user_id=user_id)
+    title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id)
 
     print(f"한국 prompt 길이  : {len(no_title_ko_pmt)}")
     main_image_paths = (t2i_prompt_module.story_images_from_prompts(
@@ -157,14 +146,20 @@ async def generate_story(data: json):
 
     # len_story = min(len(main_image_paths), len(audio_paths))  # 최소 길이를 기준으로 반복
     for i in range(0, len_story):
-        audio_name = f"{user_id}/{title}/{title}_{i+1}Page.wav"
+        audio_name = f"{user_id}/{title}/{title}_{i}Page.wav"
         print("audio_name : ", audio_name)
         print("get_audio_length 들어감")
         audio_len = video_module.get_audio_length(audio_name=audio_name)
         print("get_audio_length 나옴")
         print("audio_len : ", audio_len)
-        video_path = video_module.generate_video(page=i+1, title=title, image_path=main_image_paths[i], audio_path=audio_paths[i], audio_length=audio_len, eng_image_paths = eng_image_paths)
+        if i == 0:
+            print("title_image_paths : ", title_image_paths)
+            video_path = video_module.generate_video(page=i, title=title, image_path=title_image_paths[2], audio_path=audio_paths[i], audio_length=audio_len)
+        else:
+            print("main_image_paths : ", main_image_paths[i-1])
+            video_path = video_module.generate_video(page=i, title=title, image_path=main_image_paths[i-1], audio_path=audio_paths[i], audio_length=audio_len)
         video_paths.append(video_path)
+
 
     print("오디오 생성 완료")
     video_module.concatenate_videos(video_paths=video_paths, title=title)
@@ -172,13 +167,13 @@ async def generate_story(data: json):
     story_summmary = await llm_module.summary_story(english_prompts=summary_prompts)
     story_summmary = json.loads(story_summmary.body.decode('utf-8'))
     print("story_summary : ", story_summmary)
-    data = [user_code, story_summmary, title, genre, main_image_paths[0]]
+    insert_data = [user_code, story_summmary, title, genre, main_image_paths[0]]
 
     print("생성 완료")
-    story_controller.insert_story_controller(data)
+    story_controller.insert_story_controller(insert_data)
     print("insert까지 끝")
 
-    return {"message" : "즐거운 동화 생성을 시작했어요~ 완료되면 알려드릴게요!"}
+    return {"message": "즐거운 동화 생성을 시작했어요~ 완료되면 알려드릴게요!"}
 
 
 # 목소리 voice_cloning 학습 엔드포인트
@@ -205,23 +200,23 @@ async def generate_voice_cloning_endpoint(user_id: str = Form(...), files: List[
 
     return JSONResponse(status_code=200, content={"userVoiceId": user_voice_id})
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, background_task: BackgroundTasks):
-    print("web 소켓 뚫음")
-    await websocket.accept()
-    connected_websockets.append(websocket)
-    try:
-        while True:
-            message = await websocket.receive_text()
-            print("message : ", message)
-            data = json.loads(message)
-            if data:
-                asyncio.create_task(generate_story(data))
-    except WebSocketDisconnect:
-        print("WebSocket connection disconnected")
-        connected_websockets.remove(websocket)
-    except json.JSONDecodeError as e:
-        print(f"Error decoding JSON: {e}")
+# @app.websocket("/ws")
+# async def websocket_endpoint(websocket: WebSocket, background_task: BackgroundTasks):
+#     print("web 소켓 뚫음")
+#     await websocket.accept()
+#     connected_websockets.append(websocket)
+#     try:
+#         while True:
+#             message = await websocket.receive_text()
+#             print("message : ", message)
+#             data = json.loads(message)
+#             if data:
+#                 asyncio.create_task(generate_story(data))
+#     except WebSocketDisconnect:
+#         print("WebSocket connection disconnected")
+#         connected_websockets.remove(websocket)
+#     except json.JSONDecodeError as e:
+#         print(f"Error decoding JSON: {e}")
 
 
 # 서버 자동 실행 ( 파이썬은 포트 8002 쓸거임 )
