@@ -8,6 +8,7 @@ import requests
 from elevenlabs.client import ElevenLabs
 from fastapi import UploadFile
 
+
 class Voice_cloning_module:
     def __init__(self, api_key):
         self.api_key = api_key
@@ -65,8 +66,6 @@ class Voice_cloning_module:
         return tmpfile.name, None
 
     async def clone_voice(self, user_id: str, files: list):
-        # body = request.json()  # 요청에서 JSON 본문 추출
-        # user_id = body.get('userId')
 
         client = ElevenLabs(
             api_key=self.api_key
@@ -83,14 +82,8 @@ class Voice_cloning_module:
             user_voice_id = next((voice["voice_id"] for voice in self.cloned_voices if voice["name"] == user_id), None)
             print(user_voice_id)
 
-            # 임시 파일들을 삭제합니다.
-            for file in files:
-                os.remove(file)
-
             return user_voice_id
         except Exception as e:
             print(f"An error occurred: {str(e)}")
-            # 임시 파일들을 삭제합니다.
-            for file in files:
-                os.remove(file)
+
             return None
