@@ -2,11 +2,10 @@
 import asyncio
 import os
 import json
+import time
 from typing import List
-
 import uvicorn
 from openai import OpenAI
-
 from fastapi import FastAPI, Request, BackgroundTasks, File, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,10 +14,9 @@ import asyncio
 
 from starlette.responses import JSONResponse
 
-
 import config
 # Module import
-from config import STABILITY_KEY, image_path, image_font_path, DEEPL_API_KEY, audio_path
+from config import STABILITY_KEY, image_path, image_font_path, DEEPL_API_KEY, audio_path, FIREBASE_SERVER_KEY
 
 from ai_modules.large_language_model_module import Large_language_model_module
 from ai_modules.voice_module import Voice_synthesizer
@@ -29,6 +27,7 @@ from ai_modules.deepl_ai import Deepl_api
 from ai_modules.video_module import Video_module
 from db.controller.story_controller import StoryController
 from db.controller.clone_controller import CloneController
+from pyfcm import FCMNotification
 
 # prompt key 값 가져오기
 load_dotenv()
@@ -50,7 +49,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # 인스턴스 생성
 llm_module = Large_language_model_module(api_key=OPEN_API_KEY)
 ai_voice_module = Voice_synthesizer(api_key=OPEN_API_KEY, audio_path=audio_path)
@@ -63,25 +61,30 @@ video_module = Video_module(video_path=config.video_path, audio_path=config.audi
 story_controller = StoryController()
 clone_controller = CloneController()
 
-connected_websockets = []
+push_service = FCMNotification(api_key=config.FIREBASE_SERVER_KEY)
 
 @app.post("/generateStory")
 async def generate_story(request: Request):
     print("generate_story 들어옴")
-    story = await llm_module.generate_story(request)
-    story_data = json.loads(story.body.decode('utf-8'))
     request_data = await request.json()
+    
     title = story_data["paragraph0"]
     voice = request_data["voice"]
     genre = request_data["genre"]
     user_id = request_data["userId"]
+    token = request_data["token"]
+    print(token)
+    time.sleep(5)
+    
+    story = await llm_module.generate_story(request)
+    story_data = json.loads(story.body.decode('utf-8'))
+
     user_code = request_data["userCode"]
 
     # 이야기 데이터의 총 길이(단락 수)를 계산합니다.
     len_story = len(story_data)
     print("len : ", len_story)
     # 한국어로 된 모든 단락을 리스트로 생성합니다.
-
 
     korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
 
@@ -100,31 +103,29 @@ async def generate_story(request: Request):
     for i in range(1, 3):
         summary_prompts += english_prompts[i]
 
-    # ================ 이미지 생성 ==================
-    # audio_paths = []
-    # print("main_image 끝")
-    # # 사용자가 설정한 목소리가 'myVoice'가 아닌 경우, AI가 제공하는 목소리로 음성 파일을 생성합니다.
-    # if (voice != "myVoice"):
-    #     for i in range(0, len_story):
-    #         # 음성 파일 생성 중임을 로그로 출력합니다.
-    #         print(f"페이지 {i + 1}번째 음성파일 생성중")
-    #         # 현재 페이지를 지정합니다.
-    #         page = f"paragraph{i}"
-    #         # AI 음성 모듈을 사용하여 음성 파일을 생성합니다.
-    #         audio_file_path = ai_voice_module.generate_audio_file(voice, story_data[page], title,i, user_id=user_id)
-    #         audio_paths.append(audio_file_path)
-    # else:
-    #     # 'myVoice'가 선택된 경우, 사용자의 목소리로 음성을 복제하여 음성 파일을 생성합니다.
-    #     for i in range(0, len_story):
-    #         # 음성 파일 생성 중임을 로그로 출력합니다.
-    #         print(f"페이지 {i + 1}번째 음성파일 생성중")
-    #         # 현재 페이지를 지정합니다.
-    #         page = f"paragraph{i}"
-    #         # 사용자의 목소리로 음성을 복제하는 모듈을 호출합니다.
-    #         audio_file_path = clone_dubbing_module.generate_audio(title, story_data[page], user_id=user_id, num=i)
-    #         audio_paths.append(audio_file_path)
+    audio_paths = []
+    print("main_image 끝")
+    # 사용자가 설정한 목소리가 'myVoice'가 아닌 경우, AI가 제공하는 목소리로 음성 파일을 생성합니다.
+    if (voice != "myVoice"):
+        for i in range(0, len_story):
+            # 음성 파일 생성 중임을 로그로 출력합니다.
+            print(f"페이지 {i + 1}번째 음성파일 생성중")
+            # 현재 페이지를 지정합니다.
+            page = f"paragraph{i}"
+            # AI 음성 모듈을 사용하여 음성 파일을 생성합니다.
+            audio_file_path = ai_voice_module.generate_audio_file(voice, story_data[page], title,i, user_id=user_id)
+            audio_paths.append(audio_file_path)
+    else:
+        # 'myVoice'가 선택된 경우, 사용자의 목소리로 음성을 복제하여 음성 파일을 생성합니다.
+        for i in range(0, len_story):
+            # 음성 파일 생성 중임을 로그로 출력합니다.
+            print(f"페이지 {i + 1}번째 음성파일 생성중")
+            # 현재 페이지를 지정합니다.
+            page = f"paragraph{i}"
+            # 사용자의 목소리로 음성을 복제하는 모듈을 호출합니다.
+            audio_file_path = clone_dubbing_module.generate_audio(title, story_data[page], user_id=user_id, num=i)
+            audio_paths.append(audio_file_path)
 
-    # ========= 이미지 생성 =========
     eng_title = english_prompts[0]
 
     title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id)
@@ -133,37 +134,42 @@ async def generate_story(request: Request):
     main_image_paths = (t2i_prompt_module.story_images_from_prompts(
             no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id, initial_seed=initial_seed ))
 
-    # ========= 비디오 생성 =========
-    # video_paths = []
-    # for i in range(0, len_story):
-    #     audio_name = f"{user_id}/{title}/{title}_{i}Page.wav"
-    #     print("audio_name : ", audio_name)
-    #     print("get_audio_length 들어감")
-    #     audio_len = video_module.get_audio_length(audio_name=audio_name)
-    #     print("get_audio_length 나옴")
-    #     print("audio_len : ", audio_len)
-    #     if i == 0:
-    #         print("title_image_paths : ", title_image_paths)
-    #         video_path = video_module.generate_video(page=i, title=title, image_path=title_image_paths[2], audio_path=audio_paths[i], audio_length=audio_len)
-    #     else:
-    #         print("main_image_paths : ", main_image_paths[i-1])
-    #         video_path = video_module.generate_video(page=i, title=title, image_path=main_image_paths[i-1], audio_path=audio_paths[i], audio_length=audio_len)
-    #     video_paths.append(video_path)
-    #
-    #
-    # print("오디오 생성 완료")
-    # video_module.concatenate_videos(video_paths=video_paths, title=title)
-    #
-    # story_summmary = await llm_module.summary_story(english_prompts=summary_prompts)
-    # story_summmary = json.loads(story_summmary.body.decode('utf-8'))
-    # print("story_summary : ", story_summmary)
-    # insert_data = [user_code, story_summmary, title, genre, main_image_paths[0]]
-    #
-    # print("생성 완료")
-    # story_controller.insert_story_controller(insert_data)
-    # print("insert까지 끝")
+    video_paths = []
 
-    return {"message": "즐거운 동화 생성을 시작했어요~ 완료되면 알려드릴게요!"}
+    for i in range(0, len_story):
+        audio_name = f"{user_id}/{title}/{title}_{i}Page.wav"
+        print("audio_name : ", audio_name)
+        print("get_audio_length 들어감")
+        audio_len = video_module.get_audio_length(audio_name=audio_name)
+        print("get_audio_length 나옴")
+        print("audio_len : ", audio_len)
+        if i == 0:
+            print("title_image_paths : ", title_image_paths)
+            video_path = video_module.generate_video(page=i, title=title, image_path=title_image_paths[2], audio_path=audio_paths[i], audio_length=audio_len)
+        else:
+            print("main_image_paths : ", main_image_paths[i-1])
+            video_path = video_module.generate_video(page=i, title=title, image_path=main_image_paths[i-1], audio_path=audio_paths[i], audio_length=audio_len)
+        video_paths.append(video_path)
+
+    print("오디오 생성 완료")
+    video_module.concatenate_videos(video_paths=video_paths, title=title)
+
+    story_summmary = await llm_module.summary_story(english_prompts=summary_prompts)
+    story_summmary = json.loads(story_summmary.body.decode('utf-8'))
+    print("story_summary : ", story_summmary)
+    insert_data = [user_code, story_summmary, title, genre, main_image_paths[0]]
+
+    print("생성 완료")
+    story_controller.insert_story_controller(insert_data)
+    print("insert까지 끝")
+
+    result = push_service.notify_single_device(
+        registration_id=token,
+        message_title="스토리 생성 완료",
+        message_body="당신의 스토리가 성공적으로 생성되었습니다!"
+    )
+
+    return {"result": "Story generated successfully", "fcm_result": result}
 
 
 # 목소리 voice_cloning 학습 엔드포인트
@@ -190,23 +196,7 @@ async def generate_voice_cloning_endpoint(user_id: str = Form(...), files: List[
 
     return JSONResponse(status_code=200, content={"userVoiceId": user_voice_id})
 
-# @app.websocket("/ws")
-# async def websocket_endpoint(websocket: WebSocket, background_task: BackgroundTasks):
-#     print("web 소켓 뚫음")
-#     await websocket.accept()
-#     connected_websockets.append(websocket)
-#     try:
-#         while True:
-#             message = await websocket.receive_text()
-#             print("message : ", message)
-#             data = json.loads(message)
-#             if data:
-#                 asyncio.create_task(generate_story(data))
-#     except WebSocketDisconnect:
-#         print("WebSocket connection disconnected")
-#         connected_websockets.remove(websocket)
-#     except json.JSONDecodeError as e:
-#         print(f"Error decoding JSON: {e}")
+
 
 
 # 서버 자동 실행 ( 파이썬은 포트 8002 쓸거임 )
