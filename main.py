@@ -188,7 +188,7 @@ async def generate_voice_cloning_endpoint(user_id: str = Form(...), files: List[
         temp_file_name, error = await voice_cloning.process_audio(file)
         if error:
             print(f"An error occurred at process_audio : {str(error)}")
-            return JSONResponse(status_code=400, content={"message": error})
+            return JSONResponse(status_code=400, content={"message": "An error occurred at process_audio"})
         saved_files.append(temp_file_name)
 
     # 파일들을 모두 처리한 후 clone_voice 호출
@@ -196,7 +196,9 @@ async def generate_voice_cloning_endpoint(user_id: str = Form(...), files: List[
     if not user_voice_id:
         return JSONResponse(status_code=500, content={"message": "An error occurred at clone_voice"})
 
-    clone_controller.update_voice_id_controller(user_id, user_voice_id)
+    update_success = clone_controller.update_voice_id_controller(user_id, user_voice_id)
+    if not update_success:
+        return JSONResponse(status_code=500, content={"message": "An error occurred at update_database"})
 
     return JSONResponse(status_code=200, content={"userVoiceId": user_voice_id})
 
