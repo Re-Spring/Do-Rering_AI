@@ -30,3 +30,5 @@ J
 ai_modules/video_module.py,f/2/f217a3a5a91e488f081e3cbba8fa8bcfd4fe891f
 L
 ai_modules/dubbing_module.py,4/6/46d64ca2bd7a4123b66c479ef7fe568ad6a449cc
+@
+requirements.txt,1/9/19359a61ae2446b51b549167b014da2fcf265768

@@ -1,6 +1,4 @@
 
-«python:S101"gRename class "Text_to_image" to match the regular expression ^_?([A-Z_][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$.(ºô•É8àå»å1J$85b64de9-f180-4394-a520-b7a5cc4236c9
-bpython:S125H"Remove this commented out code.(´è–8ŒÜƒå1J$8457aa54-cc59-473b-8992-89cdd6b81615
-£python:S5886P"^Return a value of type "str" instead of "NoneType" or update function "story_image" type hint.(ò¤Ÿù8›ŒÜƒå1J$e4ac363d-6610-43e6-a3e3-28aa0c79689e
-£python:S5886q"^Return a value of type "str" instead of "NoneType" or update function "story_image" type hint.(ò¤Ÿù8ŸŒÜƒå1J$51177b1a-6d81-4ad7-8943-0b8f215e8a65
-¹python:S101‰"tRename class "T2I_generater_from_prompts" to match the regular expression ^_?([A-Z_][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$.(­×Çù8ŸŒÜƒå1J$1df452b0-7ee5-4e20-a3c2-4f858516d69f
+«python:S101"gRename class "Text_to_image" to match the regular expression ^_?([A-Z_][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$.(ºô•É8”îıÌå1J$f15d8844-25b3-4158-b66e-7020b2b7d591
+£python:S5886u"^Return a value of type "str" instead of "NoneType" or update function "story_image" type hint.(ò¤Ÿù8–îıÌå1J$48a20548-c2c3-4b3f-b85b-e67c725e2a76
+¹python:S101"tRename class "T2I_generater_from_prompts" to match the regular expression ^_?([A-Z_][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$.(­×Çù8–îıÌå1J$6d74ddb3-a7b6-4d12-86de-6d065c38c5ef

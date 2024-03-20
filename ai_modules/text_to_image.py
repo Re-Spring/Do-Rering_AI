@@ -8,8 +8,7 @@ import stability_sdk.interfaces.gooseai.generation.generation_pb2 as generation
 import sys
 from stability_sdk import client
 from pathlib import Path
-
-from config import DEEPL_API_KEY
+from config import DEEPL_API_KEY, initial_image_path
 
 deepl_module = Deepl_api(api_key=DEEPL_API_KEY)
 
@@ -29,33 +28,38 @@ class Text_to_image:
             verbose=True,
             engine="stable-diffusion-xl-1024-v1-0",
         )
-        self.fixed_seed = self.generate_fixed_seed()
 
-    # 클래스가 초기화될 때 고정 시드 값을 설정합니다.
-    def generate_fixed_seed(self):
-        return random.randint(0, 2 ** 32 - 1)
-
-    def title_image(self, eng_title: str, title: str, user_id) -> (Image.Image, int):
+    def title_image(self, eng_title: str, title: str, user_id) -> (Image.Image, int, str):
         print(f"타이틀 생성 시작 =================== {title}")
 
-        seed = self.fixed_seed
-        print(f"Seed 값 ========== : {seed}")
-        positive_prompt = f"""
-        
-        "Imagine a fairy tale world that a seven-year-old child can see."
-        "Imagine a beautiful scene that matches the title: {eng_title}"
-        
-        """
+        print(f"제목 : {title}")
+        print(f"영어 제목 : {eng_title}")
+        # 고정 시드를 생성하는 메서드입니다.
+        seed = random.randint(0, 2 ** 32 - 1)
+        prompt = f"{eng_title}"
+        try:
+            initial_image = Image.open(initial_image_path)  # PIL.Image.Image 이미지 객체로 변환
+        except FileNotFoundError:
+            warnings.warn(f"Initial image not found at {initial_image_path}.")
+            initial_image = Image.new("RGB", (1024, 1024), (0, 0, 0))
+        print(f"이미지 생김새 : {initial_image}")
 
         answers = self.stability_api.generate(
-            prompt=positive_prompt,
+            prompt=[
+                    generation.Prompt(text=f"{prompt}, anime style, No protagonist changes",parameters=generation.PromptParameters(weight=1.0)),
+                    generation.Prompt(text="worst quality, normal quality, low quality, text, watermark, logo, ugly, bad anatomy, bad hands, three hands, three legs, bad arms, missing legs, missing arms, poorly drawn face, bad face, fused face, cloned face, worst face, three crus, extra crus, fused crus, worst feet, three feet, fused feet, fused thigh, three thigh, fused thigh, extra thigh, worst thigh, missing fingers, extra fingers, ugly fingers, long fingers, hom, extra eyes, huge eyes, Posts ",parameters=generation.PromptParameters(weight=-2))
+                    ],
+            init_image=initial_image,
             seed=seed,
             steps=50,
-            cfg_scale=9.0,
             width=1024,
             height=1024,
             samples=1,
-            sampler=generation.SAMPLER_K_DPMPP_2M
+            sampler=generation.ARTIFACT_CLASSIFICATIONS,
+            guidance_prompt="""8k, best quality, masterpiece, realistic, ultra detail, photo-realistic, slender, cute face, smile, beautiful detailed eyes, 7-year-old Korean, pretty, smooth lighting, cinematic lighting, close-up""" ,
+            guidance_strength=0.4,
+            guidance_models=["clip_vit_base_patch16_384", "clip_vit_base_patch16_384"]
+
         )
         for resp in answers:
             for artifact in resp.artifacts:
@@ -69,35 +73,35 @@ class Text_to_image:
                     image_path = self.save_image(img_with_text, title, user_id)
                     print(f"타이틀 생성 종료 ====================== {seed}")
                     return img, seed, image_path  # Return the PIL.Image object directly
-                    # return image_path
+    def story_image(self, no_title_ko_pmt: str, no_title_eng_pmt: str, title: str, user_id, page: int, initial_seed) -> str:
+        print(f"이야기 생성 시작 ======================== {page}")
 
-    def story_image(self, no_title_ko_pmt: str, no_title_eng_pmt: str, title: str, user_id, page: int) -> str:
-        print(f"이야기 생성 시작 ========================{page}")
+        try:
+            initial_image = Image.open(initial_image_path)  # PIL.Image.Image 이미지 객체로 변환
+        except FileNotFoundError:
+            warnings.warn(f"Initial image not found at {initial_image_path}.")
+            initial_image = Image.new("RGB", (1024, 1024), (0, 0, 0))
+        print(f"이미지 생김새 : {initial_image}")
 
-        # title_image 함수의 반환값을 img_tuple에 할당합니다.
-        img_tuple = self.title_image(no_title_eng_pmt, title, user_id)
-        if img_tuple is None:
-            return None
-
-        # img_tuple에서 이미지 객체와 시드 값을 추출합니다.
-        img, seed, _ = img_tuple
-        negative_prompt = f"""
-        
-        Create an image by changing the background without changing the protagonist of the image.: {no_title_eng_pmt}
-        
-        """
-
+        prompt = f"{no_title_eng_pmt}"
         answers = self.stability_api.generate(
-            prompt=negative_prompt,
-            init_image=img,  # Assign our previously generated img as our Initial Image for transformation.
-            seed=seed,
+            prompt=[
+                    generation.Prompt(text=f"{prompt}, anime style, No protagonist changes",parameters=generation.PromptParameters(weight=1.0)), # 긍정 프롬프트 추가
+                    generation.Prompt(text="worst quality, normal quality, low quality, text, watermark, logo, ugly, bad anatomy, bad hands, three hands, three legs, bad arms, missing legs, missing arms, poorly drawn face, bad face, fused face, cloned face, worst face, three crus, extra crus, fused crus, worst feet, three feet, fused feet, fused thigh, three thigh, fused thigh, extra thigh, worst thigh, missing fingers, extra fingers, ugly fingers, long fingers, hom, extra eyes, huge eyes, Posts,",parameters=generation.PromptParameters(weight=-2)) # 부정 프롬프트
+                    ],
+            init_image=initial_image,
+            seed=initial_seed,
             steps=50,
             cfg_scale=9.0,
             width=1024,
             height=1024,
             samples=1,
-            sampler=generation.SAMPLER_K_DPMPP_2M
+            sampler=generation.ARTIFACT_CLASSIFICATIONS,
+            guidance_prompt="""8k, best quality, masterpiece, realistic, ultra detail, photo-realistic, slender, cute face, smile, beautiful detailed eyes, 7-year-old Korean, pretty, smooth lighting, cinematic lighting, close-up""" ,
+            guidance_strength=0.4,
+            guidance_models=["clip_vit_base_patch16_384", "clip_vit_base_patch16_384"]
         )
+
         for resp in answers:
             for artifact in resp.artifacts:
                 if artifact.finish_reason == generation.FILTER:
@@ -108,9 +112,9 @@ class Text_to_image:
                     img = Image.open(io.BytesIO(artifact.binary))
                     img_with_text = self.add_text_to_image(img, no_title_ko_pmt)
                     image_path = self.save_image(img_with_text, title, user_id, page)
-                    print(f"이야기 생성 종료 ========================{seed}")
+                    print(f"이야기 생성 종료 ======================== {initial_seed}")
                     return image_path
-        return None
+            return None
 
     # add_text_to_image() 및 save_image() 메서드는 이전과 동일합니다.
     def add_text_to_image(self, img: Image.Image, text: str, position: tuple = (10, 10), font_size: int = 25):
@@ -145,7 +149,7 @@ class T2I_generater_from_prompts:
         img_path = t2i_gen.title_image(eng_title, title, user_id=user_id)
         return img_path
 
-    def story_images_from_prompts(self, no_title_ko_pmt, no_title_eng_pmt, title, user_id):
+    def story_images_from_prompts(self, no_title_ko_pmt, no_title_eng_pmt, title, user_id, initial_seed):
         # Text_to_image 클래스의 인스턴스 생성
         t2i_gen = Text_to_image(api_key=self.api_key, image_font_path=self.image_font_path, image_path=self.image_path)
 
@@ -155,7 +159,7 @@ class T2I_generater_from_prompts:
             # 이미지 생성 함수를 호출하여 이미지를 생성하고 해당 이미지의 경로를 받아옵니다.
             print(f"이미지 생성 중 : {i}")
             page = i + 1
-            img_path = t2i_gen.story_image(no_title_ko_pmt[i], no_title_eng_pmt[i], title, user_id=user_id, page=page)
+            img_path = t2i_gen.story_image(no_title_ko_pmt[i], no_title_eng_pmt[i], title, user_id=user_id, page=page, initial_seed=initial_seed )
             # 이미지 생성이 성공하면 이미지 경로를 출력하고, 실패하면 실패 메시지를 출력합니다.
             if img_path:
                 image_paths.append(img_path)  # 이미지 파일 경로를 리스트에 추가
