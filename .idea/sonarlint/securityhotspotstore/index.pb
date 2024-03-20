@@ -20,8 +20,6 @@ G
 db/model/story_model.py,2/6/262a1b513abfd69a7a474a96ca436ffaf38b4e57
 K
 ai_modules/text_to_image.py,2/9/29cf9091e5241784c5f979c39d12f54a7de41f6b
-4
-.env,3/c/3c84dcdc6bbe3d7817c49dcdc327b926fea1808a
 F
 ai_modules/deepl_ai.py,b/1/b1062e62a9ebb64e95042cffa59bc094239e13e8
 J
@@ -32,3 +30,6 @@ L
 ai_modules/dubbing_module.py,4/6/46d64ca2bd7a4123b66c479ef7fe568ad6a449cc
 @
 requirements.txt,1/9/19359a61ae2446b51b549167b014da2fcf265768
+:
+
+Dockerfile,6/6/6651ddff6eb82c840ced7c1dddee15c6e1913dd4
