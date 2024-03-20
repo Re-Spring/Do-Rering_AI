@@ -4,10 +4,8 @@ import os
 import json
 import time
 from typing import List
-
 import uvicorn
 from openai import OpenAI
-
 from fastapi import FastAPI, Request, BackgroundTasks, File, UploadFile, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,7 +13,6 @@ from dotenv import load_dotenv
 import asyncio
 
 from starlette.responses import JSONResponse
-
 
 import config
 # Module import
@@ -38,7 +35,6 @@ OPEN_API_KEY = os.environ.get("OPENAI_API_KEY")
 VOICE_CLONING_API_KEY = os.environ.get("VOICE_CLONING_API_KEY")
 client = OpenAI(api_key=OPEN_API_KEY)
 
-
 # 기본 환경설정
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -52,7 +48,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # 인스턴스 생성
 llm_module = Large_language_model_module(api_key=OPEN_API_KEY)
@@ -72,18 +67,18 @@ push_service = FCMNotification(api_key=config.FIREBASE_SERVER_KEY)
 async def generate_story(request: Request):
     print("generate_story 들어옴")
     request_data = await request.json()
-    token = request_data["token"]
-    print(token)
-    time.sleep(5)
-    a = '''story = await llm_module.generate_story(request)
-    story_data = json.loads(story.body.decode('utf-8'))
-
+    
     title = story_data["paragraph0"]
     voice = request_data["voice"]
     genre = request_data["genre"]
+    user_id = request_data["userId"]
+    token = request_data["token"]
+    print(token)
+    time.sleep(5)
+    
+    story = await llm_module.generate_story(request)
+    story_data = json.loads(story.body.decode('utf-8'))
 
-    # user_id = request_data["userId"]
-    user_id = "hj1234"
     user_code = request_data["userCode"]
 
     # 이야기 데이터의 총 길이(단락 수)를 계산합니다.
@@ -131,27 +126,16 @@ async def generate_story(request: Request):
             audio_file_path = clone_dubbing_module.generate_audio(title, story_data[page], user_id=user_id, num=i)
             audio_paths.append(audio_file_path)
 
-
-    # 영어로 번역된 단락들을 이미지로 변환하는 모듈을 호출합니다.
-    # t2i_prompt_module.generate_images_from_prompts(english_prompts=english_prompts, korean_prompts=korean_prompts, title=title)
-
     eng_title = english_prompts[0]
-    print("eng_title : ", eng_title)
 
     title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id)
+    initial_seed=title_image_paths[1]
 
-    print(f"한국 prompt 길이  : {len(no_title_ko_pmt)}")
     main_image_paths = (t2i_prompt_module.story_images_from_prompts(
-            no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id))
-    print(f"메인 이미지 경로는 무엇인가 ? : {main_image_paths}")
-    # main_image_paths = (
-    #     t2i_prompt_module.story_images_from_prompts(
-    #         no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id)
-    # )
-    #
+            no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id, initial_seed=initial_seed ))
+
     video_paths = []
 
-    # len_story = min(len(main_image_paths), len(audio_paths))  # 최소 길이를 기준으로 반복
     for i in range(0, len_story):
         audio_name = f"{user_id}/{title}/{title}_{i}Page.wav"
         print("audio_name : ", audio_name)
@@ -167,7 +151,6 @@ async def generate_story(request: Request):
             video_path = video_module.generate_video(page=i, title=title, image_path=main_image_paths[i-1], audio_path=audio_paths[i], audio_length=audio_len)
         video_paths.append(video_path)
 
-
     print("오디오 생성 완료")
     video_module.concatenate_videos(video_paths=video_paths, title=title)
 
@@ -178,7 +161,7 @@ async def generate_story(request: Request):
 
     print("생성 완료")
     story_controller.insert_story_controller(insert_data)
-    print("insert까지 끝")'''
+    print("insert까지 끝")
 
     result = push_service.notify_single_device(
         registration_id=token,
@@ -213,23 +196,7 @@ async def generate_voice_cloning_endpoint(user_id: str = Form(...), files: List[
 
     return JSONResponse(status_code=200, content={"userVoiceId": user_voice_id})
 
-# @app.websocket("/ws")
-# async def websocket_endpoint(websocket: WebSocket, background_task: BackgroundTasks):
-#     print("web 소켓 뚫음")
-#     await websocket.accept()
-#     connected_websockets.append(websocket)
-#     try:
-#         while True:
-#             message = await websocket.receive_text()
-#             print("message : ", message)
-#             data = json.loads(message)
-#             if data:
-#                 asyncio.create_task(generate_story(data))
-#     except WebSocketDisconnect:
-#         print("WebSocket connection disconnected")
-#         connected_websockets.remove(websocket)
-#     except json.JSONDecodeError as e:
-#         print(f"Error decoding JSON: {e}")
+
 
 
 # 서버 자동 실행 ( 파이썬은 포트 8002 쓸거임 )

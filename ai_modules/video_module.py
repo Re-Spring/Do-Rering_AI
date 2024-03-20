@@ -21,16 +21,12 @@ class Video_module:
 
             return 0
 
-    def generate_video(self, page, title, image_path, audio_path, audio_length, eng_image_paths):
-        print(f"이미지 개수 : {len(image_path)}")
-        print(f"오디오 개수 : {len(audio_path)}")
-        print(f"타이틀 개수 : {len(eng_image_paths)}")
+    def generate_video(self, page, title, image_path, audio_path, audio_length):
         output_video_path = os.path.join(str(self.video_path), f"{title}_{page}.mp4")
         fps = 24
         try:
             video_clip = ImageClip(image_path).set_duration(audio_length)
             video_clip = video_clip.set_fps(fps)
-            # video = mpy.VideoFileClip(image_path).set_duration(audio_length)
             video = video_clip.set_audio(mpy.AudioFileClip(audio_path))
             video.write_videofile(output_video_path, codec="libx264", audio_codec="aac", temp_audiofile=f"{title}_{page}.m4a", remove_temp=True, verbose=False)
         except Exception as e:
