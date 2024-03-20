@@ -5,4 +5,5 @@ class CloneController:
         self.model = CloneModel()
 
     def update_voice_id_controller(self, user_id, voice_id):
-        self.model.update_voice_id(user_id, voice_id)
+        update_success = self.model.update_voice_id(user_id, voice_id)
+        return update_success
