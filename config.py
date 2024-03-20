@@ -9,6 +9,8 @@ load_dotenv()
 os.environ['STABILITY_HOST'] = 'grpc.stability.ai:443'
 STABILITY_KEY = os.environ.get("STABILITY_KEY")
 DEEPL_API_KEY = os.environ.get("DEEPL_API_KEY")
+FIREBASE_SERVER_KEY = os.environ.get("FIREBASE_SERVER_KEY")
+
 
 # 경로 설정 및 필요한 디렉터리 생성
 base_dir = Path(__file__).resolve().parent/"static"

@@ -2,6 +2,7 @@
 import asyncio
 import os
 import json
+import time
 from typing import List
 
 import uvicorn
@@ -18,7 +19,7 @@ from starlette.responses import JSONResponse
 
 import config
 # Module import
-from config import STABILITY_KEY, image_path, image_font_path, DEEPL_API_KEY, audio_path
+from config import STABILITY_KEY, image_path, image_font_path, DEEPL_API_KEY, audio_path, FIREBASE_SERVER_KEY
 
 from ai_modules.large_language_model_module import Large_language_model_module
 from ai_modules.voice_module import Voice_synthesizer
@@ -29,12 +30,14 @@ from ai_modules.deepl_ai import Deepl_api
 from ai_modules.video_module import Video_module
 from db.controller.story_controller import StoryController
 from db.controller.clone_controller import CloneController
+from pyfcm import FCMNotification
 
 # prompt key 값 가져오기
 load_dotenv()
 OPEN_API_KEY = os.environ.get("OPENAI_API_KEY")
 VOICE_CLONING_API_KEY = os.environ.get("VOICE_CLONING_API_KEY")
 client = OpenAI(api_key=OPEN_API_KEY)
+
 
 # 기본 환경설정
 app = FastAPI()
@@ -63,18 +66,22 @@ video_module = Video_module(video_path=config.video_path, audio_path=config.audi
 story_controller = StoryController()
 clone_controller = CloneController()
 
-connected_websockets = []
+push_service = FCMNotification(api_key=config.FIREBASE_SERVER_KEY)
 
 @app.post("/generateStory")
 async def generate_story(request: Request):
     print("generate_story 들어옴")
-    story = await llm_module.generate_story(request)
-    story_data = json.loads(story.body.decode('utf-8'))
     request_data = await request.json()
+    token = request_data["token"]
+    print(token)
+    time.sleep(5)
+    a = '''story = await llm_module.generate_story(request)
+    story_data = json.loads(story.body.decode('utf-8'))
 
     title = story_data["paragraph0"]
     voice = request_data["voice"]
     genre = request_data["genre"]
+
     # user_id = request_data["userId"]
     user_id = "hj1234"
     user_code = request_data["userCode"]
@@ -171,9 +178,15 @@ async def generate_story(request: Request):
 
     print("생성 완료")
     story_controller.insert_story_controller(insert_data)
-    print("insert까지 끝")
+    print("insert까지 끝")'''
 
-    return {"message": "즐거운 동화 생성을 시작했어요~ 완료되면 알려드릴게요!"}
+    result = push_service.notify_single_device(
+        registration_id=token,
+        message_title="스토리 생성 완료",
+        message_body="당신의 스토리가 성공적으로 생성되었습니다!"
+    )
+
+    return {"result": "Story generated successfully", "fcm_result": result}
 
 
 # 목소리 voice_cloning 학습 엔드포인트
