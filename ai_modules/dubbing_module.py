@@ -19,12 +19,16 @@ class Dubbing_voice_cloning:
     def fetch_cloned_voices(self):
         response = requests.get(self.url, headers=self.headers)
         data = response.json()
-        return [voice for voice in data["voices"] if voice["category"] == "cloned"]
+        # return [voice for voice in data["voices"] if voice["category"] == "cloned"]
+        return data["voices"]
 
     def generate_audio(self, title, story_text, user_id, num):
-        # 여기 부분 user_voice_id 못가져오는 경우 있음
-        user_voice_id = next((voice["voice_id"] for voice in self.cloned_voices if voice["name"] == user_id), None)
-        if user_voice_id is None:
+        # user_voice_id = next((voice["voice_id"] for voice in self.cloned_voices if voice["name"] == user_id), None)
+        matching_voices = [voice for voice in self.cloned_voices if voice["category"] == "cloned" and voice["name"] == user_id]
+        if matching_voices:
+            user_voice_id = matching_voices[0]["voice_id"]
+            print("[Dubbing_voice_cloning] generate_audio user_voice_id : ", user_voice_id)
+        else:
             raise ValueError("Invalid user ID")
         output_filename = f"{self.audio_path}/{user_id}/{title}/{title}_{num + 1}Page.wav"
         output_path = Path(f"{self.audio_path}/{user_id}/{title}")
