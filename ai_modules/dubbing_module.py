@@ -22,6 +22,7 @@ class Dubbing_voice_cloning:
         return [voice for voice in data["voices"] if voice["category"] == "cloned"]
 
     def generate_audio(self, title, story_text, user_id, num):
+        # 여기 부분 user_voice_id 못가져오는 경우 있음
         user_voice_id = next((voice["voice_id"] for voice in self.cloned_voices if voice["name"] == user_id), None)
         if user_voice_id is None:
             raise ValueError("Invalid user ID")

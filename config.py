@@ -13,9 +13,12 @@ FIREBASE_SERVER_KEY = os.environ.get("FIREBASE_SERVER_KEY")
 
 
 # 경로 설정 및 필요한 디렉터리 생성
-base_dir = Path(__file__).resolve().parent/"static"
-image_path = str(base_dir/"images")
-image_font_path = str(base_dir / "font" / "SpoqaHanSansNeo-Bold.ttf")
-audio_path = str(base_dir / "audios")
-video_path = str(base_dir / "videos")
-initial_image_path = str(base_dir / "initial_images" / "initimage.png") # 로컬 이미지 경로
+base_dir = "static"
+image_path = str(base_dir + "/images")
+image_font_path = str(base_dir + "/font" + "/SpoqaHanSansNeo-Bold.ttf")
+audio_path = str(base_dir + "/audios")
+video_path = str(base_dir + "/videos")
+initial_image_path = str(base_dir + "/initial_images" + "/initimage.png") # 로컬 이미지 경로
+
+print(base_dir)
+print(image_path)
