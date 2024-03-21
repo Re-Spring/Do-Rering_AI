@@ -60,106 +60,107 @@ story_controller = StoryController()
 clone_controller = CloneController()
 
 push_service = FCMNotification(api_key=config.FIREBASE_SERVER_KEY)
+smile = "\U0001F601"
 
 @app.post("/generateStory")
 async def generate_story(request: Request):
     print("generate_story 들어옴")
     request_data = await request.json()
-    # story = await llm_module.generate_story(request)
-    # story_data = json.loads(story.body.decode('utf-8'))
+    story = await llm_module.generate_story(request)
+    story_data = json.loads(story.body.decode('utf-8'))
     
-    # title = story_data["paragraph0"]
+    title = story_data["paragraph0"]
     voice = request_data["voice"]
     genre = request_data["genre"]
     user_id = request_data["userId"]
     user_code = request_data["userCode"]
     token = request_data["token"]
     print("token", token)
-    time.sleep(5)
 
-    # len_story = len(story_data)
-    # print("len : ", len_story)
-    # korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
-    #
-    # english_prompts = deepl_module.translate_text(text=korean_prompts, target_lang="EN-US")
-    # english_prompts = [english_prompts[i].text for i in range(0, len(english_prompts))]
-    #
-    # no_title_ko_pmt = []
-    # no_title_eng_pmt = []
-    # for i in range(1, len_story):
-    #     no_title_ko_pmt.append(korean_prompts[i])
-    #     no_title_eng_pmt.append(english_prompts[i])
-    #
-    # summary_prompts = ""
-    # for i in range(1, 3):
-    #     summary_prompts += english_prompts[i]
-    #
-    # audio_paths = []
-    # print("main_image 끝")
-    # # 사용자가 설정한 목소리가 'myVoice'가 아닌 경우, AI가 제공하는 목소리로 음성 파일을 생성합니다.
-    # if (voice != "myVoice"):
-    #     for i in range(0, len_story):
-    #         # 음성 파일 생성 중임을 로그로 출력합니다.
-    #         print(f"페이지 {i + 1}번째 음성파일 생성중")
-    #         # 현재 페이지를 지정합니다.
-    #         page = f"paragraph{i}"
-    #         # AI 음성 모듈을 사용하여 음성 파일을 생성합니다.
-    #         audio_file_path = ai_voice_module.generate_audio_file(voice, story_data[page], title,i, user_id=user_id)
-    #         audio_paths.append(audio_file_path)
-    # else:
-    #     # 'myVoice'가 선택된 경우, 사용자의 목소리로 음성을 복제하여 음성 파일을 생성합니다.
-    #     for i in range(0, len_story):
-    #         # 음성 파일 생성 중임을 로그로 출력합니다.
-    #         print(f"페이지 {i + 1}번째 음성파일 생성중")
-    #         # 현재 페이지를 지정합니다.
-    #         page = f"paragraph{i}"
-    #         # 사용자의 목소리로 음성을 복제하는 모듈을 호출합니다.
-    #         audio_file_path = clone_dubbing_module.generate_audio(title, story_data[page], user_id=user_id, num=i)
-    #         audio_paths.append(audio_file_path)
-    #
-    # eng_title = english_prompts[0]
-    #
-    # title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id)
-    # initial_seed=title_image_paths[1]
-    #
-    # main_image_paths = (t2i_prompt_module.story_images_from_prompts(
-    #         no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id, initial_seed=initial_seed ))
-    #
-    # video_paths = []
-    #
-    # for i in range(0, len_story):
-    #     audio_name = f"{user_id}/{title}/{title}_{i}Page.wav"
-    #     print("audio_name : ", audio_name)
-    #     print("get_audio_length 들어감")
-    #     audio_len = video_module.get_audio_length(audio_name=audio_name)
-    #     print("get_audio_length 나옴")
-    #     print("audio_len : ", audio_len)
-    #     if i == 0:
-    #         print("title_image_paths : ", title_image_paths)
-    #         video_path = video_module.generate_video(page=i, title=title, image_path=title_image_paths[2], audio_path=audio_paths[i], audio_length=audio_len)
-    #     else:
-    #         print("main_image_paths : ", main_image_paths[i-1])
-    #         video_path = video_module.generate_video(page=i, title=title, image_path=main_image_paths[i-1], audio_path=audio_paths[i], audio_length=audio_len)
-    #     video_paths.append(video_path)
-    #
-    # print("오디오 생성 완료")
-    # video_module.concatenate_videos(video_paths=video_paths, title=title)
-    #
-    # story_summmary = await llm_module.summary_story(english_prompts=summary_prompts)
-    # story_summmary = json.loads(story_summmary.body.decode('utf-8'))
-    # print("story_summary : ", story_summmary)
-    # insert_data = [user_code, story_summmary, title, genre, main_image_paths[0]]
-    #
-    # print("생성 완료")
-    # story_controller.insert_story_controller(insert_data)
-    # print("insert까지 끝")
+    len_story = len(story_data)
+    print("len : ", len_story)
+    korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
+
+    english_prompts = deepl_module.translate_text(text=korean_prompts, target_lang="EN-US")
+    english_prompts = [english_prompts[i].text for i in range(0, len(english_prompts))]
+
+    no_title_ko_pmt = []
+    no_title_eng_pmt = []
+    for i in range(1, len_story):
+        no_title_ko_pmt.append(korean_prompts[i])
+        no_title_eng_pmt.append(english_prompts[i])
+
+    summary_prompts = ""
+    for i in range(1, 3):
+        summary_prompts += english_prompts[i]
+
+    audio_paths = []
+
+    print("main_image 끝")
+    # 사용자가 설정한 목소리가 'myVoice'가 아닌 경우, AI가 제공하는 목소리로 음성 파일을 생성합니다.
+    if (voice != "myVoice"):
+        for i in range(0, len_story):
+            # 음성 파일 생성 중임을 로그로 출력합니다.
+            print(f"페이지 {i + 1}번째 음성파일 생성중")
+            # 현재 페이지를 지정합니다.
+            page = f"paragraph{i}"
+            # AI 음성 모듈을 사용하여 음성 파일을 생성합니다.
+            audio_file_path = ai_voice_module.generate_audio_file(voice, story_data[page], title,i, user_id=user_id)
+            audio_paths.append(audio_file_path)
+    else:
+        # 'myVoice'가 선택된 경우, 사용자의 목소리로 음성을 복제하여 음성 파일을 생성합니다.
+        for i in range(0, len_story):
+            # 음성 파일 생성 중임을 로그로 출력합니다.
+            print(f"페이지 {i + 1}번째 음성파일 생성중")
+            # 현재 페이지를 지정합니다.
+            page = f"paragraph{i}"
+            # 사용자의 목소리로 음성을 복제하는 모듈을 호출합니다.
+            audio_file_path = clone_dubbing_module.generate_audio(title, story_data[page], user_id=user_id, num=i)
+            audio_paths.append(audio_file_path)
+
+    eng_title = english_prompts[0]
+
+    title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id)
+    initial_seed=title_image_paths[1]
+
+    main_image_paths = (t2i_prompt_module.story_images_from_prompts(
+            no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id, initial_seed=initial_seed ))
+
+    video_paths = []
+
+    for i in range(0, len_story):
+        audio_name = f"{user_id}/{title}/{title}_{i}Page.wav"
+        print("audio_name : ", audio_name)
+        print("get_audio_length 들어감")
+        audio_len = video_module.get_audio_length(audio_name=audio_name)
+        print("get_audio_length 나옴")
+        print("audio_len : ", audio_len)
+        if i == 0:
+            print("title_image_paths : ", title_image_paths)
+            video_path = video_module.generate_video(page=i, title=title, image_path=title_image_paths[2], audio_path=audio_paths[i], audio_length=audio_len)
+        else:
+            print("main_image_paths : ", main_image_paths[i-1])
+            video_path = video_module.generate_video(page=i, title=title, image_path=main_image_paths[i-1], audio_path=audio_paths[i], audio_length=audio_len)
+        video_paths.append(video_path)
+
+    print("오디오 생성 완료")
+    concatenate_video_path = video_module.concatenate_videos(video_paths=video_paths, title=title)
+
+    story_summmary = await llm_module.summary_story(english_prompts=summary_prompts)
+    story_summmary = json.loads(story_summmary.body.decode('utf-8'))
+
+
+    fairytale_code = story_controller.insert_and_select_story_controller([user_code, story_summmary, title, genre, title_image_paths[2]])
+    story_controller.insert_video_controller(fairytale_code, concatenate_video_path)
+
 
     result = push_service.notify_single_device(
         registration_id=token,
-        message_title="동화가 만들어졌어요!",
-        message_body="즐거운 동화를 보러가봐요 >_<*"
+        message_title=f"요청하신 {title} 동화가 만들어졌어요!",
+        message_body=f"즐거운 동화를 보러가봐요 {smile}"
     )
 
+    print(f"finish generate {title}")
     return {"result": "Story generated successfully", "fcm_result": result}
 
 

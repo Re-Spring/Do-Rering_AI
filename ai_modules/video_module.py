@@ -44,11 +44,11 @@ class Video_module:
                 clip = VideoFileClip(path)
                 clip = clip.set_fps(fps)
                 clips.append(clip)
-
             # 클립이 비어있는지 확인하고 이어붙이기
             if clips:
                 final_clip = concatenate_videoclips(clips)
                 final_clip.write_videofile(output_path, codec="libx264", fps=fps)
+                return output_path
             else:
                 print("No video clips to concatenate.")
         except Exception as e:
