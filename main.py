@@ -6,7 +6,7 @@ import time
 from typing import List
 import uvicorn
 from openai import OpenAI
-from fastapi import FastAPI, Request, BackgroundTasks, File, UploadFile, Form
+from fastapi import FastAPI, Request, BackgroundTasks, File, UploadFile, Form, Path
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -23,9 +23,12 @@ from ai_modules.dubbing_module import Dubbing_voice_cloning
 from ai_modules.text_to_image import Text_to_image, T2I_generater_from_prompts
 from ai_modules.deepl_ai import Deepl_api
 from ai_modules.video_module import Video_module
+from ai_modules.delete_voice_module import Delete_voice_module
 from db.controller.story_controller import StoryController
 from db.controller.clone_controller import CloneController
 from pyfcm import FCMNotification
+from pydantic import BaseModel
+
 
 # prompt key 값 가져오기
 load_dotenv()
@@ -56,6 +59,7 @@ t2i_module = Text_to_image(api_key=STABILITY_KEY, image_font_path=image_font_pat
 t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
 deepl_module = Deepl_api(api_key=DEEPL_API_KEY)
 video_module = Video_module(video_path=config.video_path, audio_path=config.audio_path)
+delete_module = Delete_voice_module(api_key=VOICE_CLONING_API_KEY)
 story_controller = StoryController()
 clone_controller = CloneController()
 
@@ -167,7 +171,7 @@ async def generate_story(request: Request):
 # 목소리 voice_cloning 학습 엔드포인트
 @app.post("/voiceCloning")
 async def generate_voice_cloning_endpoint(user_id: str = Form(...), files: List[UploadFile] = File(...)):
-    print("voiceCloning ENDpoint 들어옴")
+    print("---- [generate_voice_cloning_endpoint] ----")
 
     # 업로드된 파일 처리
     saved_files = []
@@ -189,6 +193,31 @@ async def generate_voice_cloning_endpoint(user_id: str = Form(...), files: List[
         return JSONResponse(status_code=500, content={"message": "An error occurred at update_database"})
 
     return JSONResponse(status_code=200, content={"userVoiceId": user_voice_id})
+
+
+# Pydantic 모델을 정의하여 요청 본문의 구조를 지정합니다.
+# 이 모델은 클라이언트로부터 받은 데이터의 유효성 검사를 자동으로 수행해줍니다.
+class VoiceIdRequest(BaseModel):
+    voiceId: str    # 요청 본문에서 기대하는 'voiceId' 필드를 정의합니다.
+
+# 'request_body' 변수는 클라이언트로부터 받은 요청 본문을 'VoiceIdRequest' 모델의 인스턴스로 변환하여 저장합니다.
+@app.post("/deleteVoice")
+async def delete_voice_id_endpoint(request_body: VoiceIdRequest):
+    print("---- [delete_voice_id_endpoint] ----")
+    voice_id = request_body.voiceId
+
+    status = await delete_module.delete_voice(voice_id)
+    if status.status_code == 200:
+        delete_success = clone_controller.delete_voice_id_controller(voice_id)
+
+        if not delete_success:
+            return JSONResponse(status_code=500, content={"message": "An error occurred at update_database"})
+
+        return JSONResponse(status_code=200, content={"message": "delete_voice_id_endpoint success"})
+
+    else:
+        return JSONResponse(status_code=500, content={"error": status.text})
+
 
 
 
