@@ -8,5 +8,5 @@ class StoryController:
         return self.model.insert_fairytale_info(data)
 
     def insert_video_controller(self, data):
-        self.insert_video_controller(data)
+        self.model.insert_video_info(data)
 

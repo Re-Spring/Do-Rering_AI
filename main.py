@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 from starlette.responses import JSONResponse
 
 import config
-# Module import
 from config import STABILITY_KEY, image_path, image_font_path, DEEPL_API_KEY, audio_path, FIREBASE_SERVER_KEY
 
 from ai_modules.large_language_model_module import Large_language_model_module
@@ -66,9 +65,11 @@ clone_controller = CloneController()
 push_service = FCMNotification(api_key=config.FIREBASE_SERVER_KEY)
 smile = "\U0001F601"
 
+
 @app.post("/generateStory")
 async def generate_story(request: Request):
     print("generate_story 들어옴")
+
     request_data = await request.json()
     story = await llm_module.generate_story(request)
     story_data = json.loads(story.body.decode('utf-8'))
@@ -149,13 +150,14 @@ async def generate_story(request: Request):
 
     print("오디오 생성 완료")
     concatenate_video_path = video_module.concatenate_videos(video_paths=video_paths, title=title)
+    print("con_v_path", concatenate_video_path)
 
     story_summmary = await llm_module.summary_story(english_prompts=summary_prompts)
     story_summmary = json.loads(story_summmary.body.decode('utf-8'))
 
 
     fairytale_code = story_controller.insert_and_select_story_controller([user_code, story_summmary, title, genre, title_image_paths[2]])
-    story_controller.insert_video_controller(fairytale_code, concatenate_video_path)
+    story_controller.insert_video_controller([fairytale_code, concatenate_video_path])
 
 
     result = push_service.notify_single_device(
@@ -165,7 +167,6 @@ async def generate_story(request: Request):
     )
 
     print(f"finish generate {title}")
-    return {"result": "Story generated successfully", "fcm_result": result}
 
 
 # 목소리 voice_cloning 학습 엔드포인트
@@ -217,7 +218,6 @@ async def delete_voice_id_endpoint(request_body: VoiceIdRequest):
 
     else:
         return JSONResponse(status_code=500, content={"error": status.text})
-
 
 
 
