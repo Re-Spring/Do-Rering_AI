@@ -14,7 +14,17 @@ def create_db_connection():
     try:
         connection = mysql.connector.connect(**config)
         if connection.is_connected():
-            print("Database connection was successful")
+            print("데이터베이스 연결 성공")
             return connection
     except Error as e:
-        print(f"The error '{e}' occurred")
+        print(f"오류 '{e}' 발생")
+
+# 컨텍스트 매니저 사용 예시
+def execute_query(connection, query):
+    with connection.cursor() as cursor:
+        try:
+            cursor.execute(query)
+            connection.commit()  # 변경 사항 커밋 보장
+            print("쿼리 성공적으로 실행됨")
+        except Error as e:
+            print(f"오류 '{e}' 발생")

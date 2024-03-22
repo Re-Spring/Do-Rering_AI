@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="dorering@ls-1cbbba9eb8cd1fd863325905431688dd6fa82dba.cfk8mckqasu6.ap-northeast-2.rds.amazonaws.com" uuid="e4b7921b-b8d9-4191-b284-2903cd04e70a">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://ls-1cbbba9eb8cd1fd863325905431688dd6fa82dba.cfk8mckqasu6.ap-northeast-2.rds.amazonaws.com:3306/dorering</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+  </component>
+</project>
