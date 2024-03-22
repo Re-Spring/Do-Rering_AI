@@ -23,6 +23,7 @@ class Dubbing_voice_cloning:
         return data["voices"]
 
     def generate_audio(self, title, story_text, user_id, num):
+        print("---- [generate_audio] ----")
         # user_voice_id = next((voice["voice_id"] for voice in self.cloned_voices if voice["name"] == user_id), None)
         matching_voices = [voice for voice in self.cloned_voices if voice["category"] == "cloned" and voice["name"] == user_id]
         if matching_voices:
@@ -40,14 +41,16 @@ class Dubbing_voice_cloning:
             api_key=self.api_key
         )
 
-        # 텍스트를 음성으로 변환
+        # 텍스트를 음성으로 변환(이터러블한 제너레이터 객체를 반환)
         audio = client.generate(
             text=story_text,
             voice=user_voice_id,
             model="eleven_multilingual_v2"
         )
 
+        # audio 제너레이터가 생성하는 각 chunk를 순회하며, 이를 바이너리 모드로 열린 파일에 바이트 단위로 쓰기를 반복
         with open(output_filename, 'wb') as audio_file:
-            audio_file.write(audio)
+            for chunk in audio:
+                audio_file.write(chunk)
 
         return output_filename
