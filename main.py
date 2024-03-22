@@ -151,7 +151,7 @@ async def generate_story(request: Request):
 
 
     fairytale_code = story_controller.insert_and_select_story_controller([user_code, story_summmary, title, genre, title_image_paths[2]])
-    story_controller.insert_video_controller(fairytale_code, concatenate_video_path)
+    story_controller.insert_video_controller([fairytale_code, concatenate_video_path])
 
 
     result = push_service.notify_single_device(

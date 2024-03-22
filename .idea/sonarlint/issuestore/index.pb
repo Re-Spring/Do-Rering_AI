@@ -14,8 +14,6 @@ Q
 !db/controller/story_controller.py,1/b/1b982a97804fcee881b16d705b2ea6d035529d1a
 D
 db/model/__init__.py,9/b/9becae1abf650da9c5ea66732a69f49ed4dd6e73
-H
-db/model/sample_model.py,8/5/852463100ef6c49c8fbf9f548b5a216f3664253d
 G
 db/model/story_model.py,2/6/262a1b513abfd69a7a474a96ca436ffaf38b4e57
 K
@@ -35,3 +33,5 @@ L
 Dockerfile,6/6/6651ddff6eb82c840ced7c1dddee15c6e1913dd4
 4
 .env,3/c/3c84dcdc6bbe3d7817c49dcdc327b926fea1808a
+C
+static/videos/dummy,1/a/1ab09ee14967e7d3ed4d5c2c88d619285b38453c
