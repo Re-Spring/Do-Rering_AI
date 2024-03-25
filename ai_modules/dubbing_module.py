@@ -1,7 +1,7 @@
 # voice_cloning.py
-from elevenlabs.client import ElevenLabs
+import httpx
+from elevenlabs.client import ElevenLabs, AsyncElevenLabs
 import requests
-# from elevenlabs import generate
 from pathlib import Path
 
 class Dubbing_voice_cloning:
@@ -35,6 +35,11 @@ class Dubbing_voice_cloning:
 
         if not output_path.exists():
             output_path.mkdir(parents=True)
+
+        # client = AsyncElevenLabs(
+        #     api_key=self.api_key,
+        #     httpx_client=httpx.AsyncClient(...)
+        # )
 
         client = ElevenLabs(
             api_key=self.api_key
