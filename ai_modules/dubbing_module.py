@@ -24,7 +24,6 @@ class Dubbing_voice_cloning:
 
     def generate_audio(self, title, story_text, user_id, num):
         print("---- [generate_audio] ----")
-        # user_voice_id = next((voice["voice_id"] for voice in self.cloned_voices if voice["name"] == user_id), None)
         matching_voices = [voice for voice in self.cloned_voices if voice["category"] == "cloned" and voice["name"] == user_id]
         if matching_voices:
             user_voice_id = matching_voices[0]["voice_id"]
