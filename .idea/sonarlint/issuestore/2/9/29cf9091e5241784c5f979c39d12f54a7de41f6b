@@ -1,4 +1,5 @@
 
-«python:S101"gRename class "Text_to_image" to match the regular expression ^_?([A-Z_][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$.(ºô•É8”îıÌå1J$28483cc4-9a42-41df-b003-112d8dc095bb
-£python:S5886u"^Return a value of type "str" instead of "NoneType" or update function "story_image" type hint.(ò¤Ÿù8–îıÌå1J$e509594f-5861-4287-8266-f97f291c3708
-¹python:S101"tRename class "T2I_generater_from_prompts" to match the regular expression ^_?([A-Z_][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$.(­×Çù8–îıÌå1J$d9e4079a-7192-4307-a238-c410142fa677
+«python:S101"gRename class "Text_to_image" to match the regular expression ^_?([A-Z_][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$.(ºô•É8”îıÌå1J$91ad6e33-eb53-4139-ba89-6fddf20a58a0
+ypython:S1172#"/Remove the unused function parameter "user_id".(õÄ­„ÿÿÿÿÿ8´ƒî ç1J$ec251ea9-e9ca-49be-8a1f-73ffdafcc029
+¤python:S5886¡"^Return a value of type "str" instead of "NoneType" or update function "story_image" type hint.(ò¤Ÿù8–îıÌå1J$d54a8078-8863-4318-b482-20a9dcd5e144
+¹python:S101Ç"tRename class "T2I_generater_from_prompts" to match the regular expression ^_?([A-Z_][a-zA-Z0-9]*|[a-z_][a-z0-9_]*)$.(­×Çù8–îıÌå1J$5c7d3fa6-e31a-4dc0-a5a6-87984f906b9d
