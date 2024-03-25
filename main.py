@@ -129,7 +129,6 @@ async def generate_story(request: Request):
     character_image_path = t2i_module.character_image(title=title, eng_title=eng_title, user_id=user_id)
 
     title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id, seed=character_image_path[1])
-    initial_seed=title_image_paths[1]
 
     main_image_paths = (t2i_prompt_module.story_images_from_prompts(
             no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id, initial_seed=character_image_path[1]))
