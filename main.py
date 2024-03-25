@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from starlette.responses import JSONResponse
 
 import config
-from config import STABILITY_KEY, image_path, image_font_path, DEEPL_API_KEY, audio_path, FIREBASE_SERVER_KEY
+from config import STABILITY_KEY, image_path, image_font_path, DEEPL_API_KEY, audio_path, FIREBASE_SERVER_KEY, character_image_path
 
 from ai_modules.large_language_model_module import Large_language_model_module
 from ai_modules.voice_module import Voice_synthesizer
@@ -54,8 +54,8 @@ llm_module = Large_language_model_module(api_key=OPEN_API_KEY)
 ai_voice_module = Voice_synthesizer(api_key=OPEN_API_KEY, audio_path=audio_path)
 voice_cloning = Voice_cloning_module(api_key=VOICE_CLONING_API_KEY)
 clone_dubbing_module = Dubbing_voice_cloning(api_key=VOICE_CLONING_API_KEY, audio_path=audio_path)
-t2i_module = Text_to_image(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
-t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
+t2i_module = Text_to_image(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path, character_image_path=character_image_path)
+t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path, character_image_path=character_image_path)
 deepl_module = Deepl_api(api_key=DEEPL_API_KEY)
 video_module = Video_module(video_path=config.video_path, audio_path=config.audio_path)
 delete_module = Delete_voice_module(api_key=VOICE_CLONING_API_KEY)
@@ -101,7 +101,6 @@ async def generate_story(request: Request):
 
     audio_paths = []
 
-    print("main_image 끝")
     # 사용자가 설정한 목소리가 'myVoice'가 아닌 경우, AI가 제공하는 목소리로 음성 파일을 생성합니다.
     if (voice != "myVoice"):
         for i in range(0, len_story):
@@ -125,11 +124,15 @@ async def generate_story(request: Request):
 
     eng_title = english_prompts[0]
 
-    title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id)
+    # 여기에 캐릭터 이미지 생성하는 곳
+    # 0 : img, 1 : seed, 2 : character_image_path
+    character_image_path = t2i_module.character_image(title=title, eng_title=eng_title, user_id=user_id)
+
+    title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id, seed=character_image_path[1])
     initial_seed=title_image_paths[1]
 
     main_image_paths = (t2i_prompt_module.story_images_from_prompts(
-            no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id, initial_seed=initial_seed ))
+            no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id, initial_seed=character_image_path[1]))
 
     video_paths = []
 

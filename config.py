@@ -18,7 +18,6 @@ image_path = str(base_dir + "/images")
 image_font_path = str(base_dir + "/font" + "/SpoqaHanSansNeo-Bold.ttf")
 audio_path = str(base_dir + "/audios")
 video_path = str(base_dir + "/videos")
-initial_image_path = str(base_dir + "/initial_images" + "/initimage.png") # 로컬 이미지 경로
+initial_image_path = str(base_dir + "/initial_images" + "/initimage1.png") # 로컬 이미지 경로
+character_image_path = str(base_dir + "/character_images")
 
-print(base_dir)
-print(image_path)
