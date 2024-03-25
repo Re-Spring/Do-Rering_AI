@@ -128,10 +128,10 @@ async def generate_story(request: Request):
     # 0 : img, 1 : seed, 2 : character_image_path
     character_image_path = t2i_module.character_image(title=title, eng_title=eng_title, user_id=user_id)
 
-    title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id, seed=character_image_path[1])
+    title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id, seed=character_image_path[1], initial_image=character_image_path[0])
 
     main_image_paths = (t2i_prompt_module.story_images_from_prompts(
-            no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id, initial_seed=character_image_path[1]))
+            no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id, initial_seed=character_image_path[1], initial_image=title_image_paths[0]))
 
     video_paths = []
 
@@ -158,8 +158,8 @@ async def generate_story(request: Request):
     story_summmary = json.loads(story_summmary.body.decode('utf-8'))
 
 
-    fairytale_code = story_controller.insert_and_select_story_controller([user_code, story_summmary, title, genre, title_image_paths[2]])
-    story_controller.insert_video_controller([fairytale_code, concatenate_video_path])
+    # fairytale_code = story_controller.insert_and_select_story_controller([user_code, story_summmary, title, genre, title_image_paths[2]])
+    # story_controller.insert_video_controller([fairytale_code, concatenate_video_path])
 
 
     result = push_service.notify_single_device(
