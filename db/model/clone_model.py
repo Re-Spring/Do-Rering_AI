@@ -17,10 +17,8 @@ class CloneModel:
             """
             cursor.execute(query, (voice_id, user_id))
             connection.commit()
-            print(f"Voice ID {voice_id} was successfully updated for user {user_id}.")
             return True
         except Error as e:
-            print(f"The error '{e}' occurred during the user_info table update.")
             return False
         finally:
             if connection.is_connected():
@@ -44,10 +42,8 @@ class CloneModel:
             """
             cursor.execute(query, (voice_id,))
             connection.commit()
-            print(f"Voice ID {voice_id} was successfully deleted.")
             return True
         except Error as e:
-            print(f"The error '{e}' occurred during the exp_voice_id table update.")
             return False
         finally:
             if connection.is_connected():

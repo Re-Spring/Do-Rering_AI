@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from starlette.responses import JSONResponse
 
 import config
-from config import STABILITY_KEY, image_path, image_font_path, DEEPL_API_KEY, audio_path, FIREBASE_SERVER_KEY
+from config import STABILITY_KEY, image_path, image_font_path, DEEPL_API_KEY, audio_path, FIREBASE_SERVER_KEY, character_image_path
 
 from ai_modules.large_language_model_module import Large_language_model_module
 from ai_modules.voice_module import Voice_synthesizer
@@ -54,8 +54,8 @@ llm_module = Large_language_model_module(api_key=OPEN_API_KEY)
 ai_voice_module = Voice_synthesizer(api_key=OPEN_API_KEY, audio_path=audio_path)
 voice_cloning = Voice_cloning_module(api_key=VOICE_CLONING_API_KEY)
 clone_dubbing_module = Dubbing_voice_cloning(api_key=VOICE_CLONING_API_KEY, audio_path=audio_path)
-t2i_module = Text_to_image(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
-t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path)
+t2i_module = Text_to_image(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path, character_image_path=character_image_path)
+t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path, character_image_path=character_image_path)
 deepl_module = Deepl_api(api_key=DEEPL_API_KEY)
 video_module = Video_module(video_path=config.video_path, audio_path=config.audio_path)
 delete_module = Delete_voice_module(api_key=VOICE_CLONING_API_KEY)
@@ -68,7 +68,6 @@ smile = "\U0001F601"
 
 @app.post("/generateStory")
 async def generate_story(request: Request):
-    print("generate_story 들어옴")
 
     request_data = await request.json()
     story = await llm_module.generate_story(request)
@@ -80,10 +79,8 @@ async def generate_story(request: Request):
     user_id = request_data["userId"]
     user_code = request_data["userCode"]
     token = request_data["token"]
-    print("token", token)
 
     len_story = len(story_data)
-    print("len : ", len_story)
     korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
 
     english_prompts = deepl_module.translate_text(text=korean_prompts, target_lang="EN-US")
@@ -101,7 +98,6 @@ async def generate_story(request: Request):
 
     audio_paths = []
 
-    print("main_image 끝")
     # 사용자가 설정한 목소리가 'myVoice'가 아닌 경우, AI가 제공하는 목소리로 음성 파일을 생성합니다.
     if (voice != "myVoice"):
         for i in range(0, len_story):
@@ -125,39 +121,34 @@ async def generate_story(request: Request):
 
     eng_title = english_prompts[0]
 
-    title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id)
-    initial_seed=title_image_paths[1]
+    # 여기에 캐릭터 이미지 생성하는 곳
+    # 0 : img, 1 : seed, 2 : character_image_path
+    character_image_path = t2i_module.character_image(title=title, eng_title=eng_title, user_id=user_id)
+
+    title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id, seed=character_image_path[1], initial_image=character_image_path[0])
 
     main_image_paths = (t2i_prompt_module.story_images_from_prompts(
-            no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id, initial_seed=initial_seed ))
+            no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id, initial_seed=character_image_path[1], initial_image=title_image_paths[0]))
 
     video_paths = []
 
     for i in range(0, len_story):
         audio_name = f"{user_id}/{title}/{title}_{i}Page.wav"
-        print("audio_name : ", audio_name)
-        print("get_audio_length 들어감")
         audio_len = video_module.get_audio_length(audio_name=audio_name)
-        print("get_audio_length 나옴")
-        print("audio_len : ", audio_len)
         if i == 0:
-            print("title_image_paths : ", title_image_paths)
             video_path = video_module.generate_video(page=i, title=title, image_path=title_image_paths[2], audio_path=audio_paths[i], audio_length=audio_len)
         else:
-            print("main_image_paths : ", main_image_paths[i-1])
             video_path = video_module.generate_video(page=i, title=title, image_path=main_image_paths[i-1], audio_path=audio_paths[i], audio_length=audio_len)
         video_paths.append(video_path)
 
-    print("오디오 생성 완료")
     concatenate_video_path = video_module.concatenate_videos(video_paths=video_paths, title=title)
-    print("con_v_path", concatenate_video_path)
 
     story_summmary = await llm_module.summary_story(english_prompts=summary_prompts)
     story_summmary = json.loads(story_summmary.body.decode('utf-8'))
 
 
-    fairytale_code = story_controller.insert_and_select_story_controller([user_code, story_summmary, title, genre, title_image_paths[2]])
-    story_controller.insert_video_controller([fairytale_code, concatenate_video_path])
+    # fairytale_code = story_controller.insert_and_select_story_controller([user_code, story_summmary, title, genre, title_image_paths[2]])
+    # story_controller.insert_video_controller([fairytale_code, concatenate_video_path])
 
 
     result = push_service.notify_single_device(
@@ -166,21 +157,17 @@ async def generate_story(request: Request):
         message_body=f"즐거운 동화를 보러가봐요 {smile}"
     )
 
-    print(f"finish generate {title}")
 
 
 # 목소리 voice_cloning 학습 엔드포인트
 @app.post("/voiceCloning")
 async def generate_voice_cloning_endpoint(user_id: str = Form(...), files: List[UploadFile] = File(...)):
-    print("---- [generate_voice_cloning_endpoint] ----")
-
     # 업로드된 파일 처리
     saved_files = []
     for file in files:
         # await 키워드를 추가하여 비동기 함수의 결과를 기다림
         temp_file_name, error = await voice_cloning.process_audio(file)
         if error:
-            print(f"An error occurred at process_audio : {str(error)}")
             return JSONResponse(status_code=400, content={"message": "An error occurred at process_audio"})
         saved_files.append(temp_file_name)
 
@@ -204,7 +191,6 @@ class VoiceIdRequest(BaseModel):
 # 'request_body' 변수는 클라이언트로부터 받은 요청 본문을 'VoiceIdRequest' 모델의 인스턴스로 변환하여 저장합니다.
 @app.post("/deleteVoice")
 async def delete_voice_id_endpoint(request_body: VoiceIdRequest):
-    print("---- [delete_voice_id_endpoint] ----")
     voice_id = request_body.voiceId
 
     status = await delete_module.delete_voice(voice_id)

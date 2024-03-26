@@ -1,7 +1,7 @@
 # voice_cloning.py
-from elevenlabs.client import ElevenLabs
+import httpx
+from elevenlabs.client import ElevenLabs, AsyncElevenLabs
 import requests
-# from elevenlabs import generate
 from pathlib import Path
 
 class Dubbing_voice_cloning:
@@ -19,19 +19,16 @@ class Dubbing_voice_cloning:
     def fetch_cloned_voices(self):
         response = requests.get(self.url, headers=self.headers)
         data = response.json()
-        # return [voice for voice in data["voices"] if voice["category"] == "cloned"]
         return data["voices"]
 
     def generate_audio(self, title, story_text, user_id, num):
         print("---- [generate_audio] ----")
-        # user_voice_id = next((voice["voice_id"] for voice in self.cloned_voices if voice["name"] == user_id), None)
         matching_voices = [voice for voice in self.cloned_voices if voice["category"] == "cloned" and voice["name"] == user_id]
         if matching_voices:
             user_voice_id = matching_voices[0]["voice_id"]
-            print("[Dubbing_voice_cloning] generate_audio user_voice_id : ", user_voice_id)
         else:
             raise ValueError("Invalid user ID")
-        output_filename = f"{self.audio_path}/{user_id}/{title}/{title}_{num + 1}Page.wav"
+        output_filename = f"{self.audio_path}/{user_id}/{title}/{title}_{num}Page.wav"
         output_path = Path(f"{self.audio_path}/{user_id}/{title}")
 
         if not output_path.exists():
