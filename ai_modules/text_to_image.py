@@ -76,8 +76,6 @@ class Text_to_image:
 
     def title_image(self, eng_title: str, title: str, user_id, seed, initial_image: Image.Image) -> (Image.Image, int, str):
         print(f"타이틀 생성 시작 =================== {title}")
-        print(f"제목 : {title}")
-        print(f"영어 제목 : {eng_title}")
         # 고정 시드를 생성하는 메서드입니다.
         prompt = f"{eng_title}"
         print(f"이미지 생김새 : {initial_image}")
@@ -114,7 +112,12 @@ class Text_to_image:
                     return img, seed, image_path  # Return the PIL.Image object directly
     def story_image(self, no_title_ko_pmt: str, no_title_eng_pmt: str, title: str, user_id, page: int, initial_seed, initial_image: Image.Image) -> str:
         print(f"이야기 생성 시작 ======================== {page}")
-        print(f"이미지 생김새 : {initial_image}")
+
+        try:
+            initial_image = Image.open(initial_image_path)  # PIL.Image.Image 이미지 객체로 변환
+        except FileNotFoundError:
+            warnings.warn(f"Initial image not found at {initial_image_path}.")
+            initial_image = Image.new("RGB", (1024, 1024), (0, 0, 0))
 
         prompt = f"{no_title_eng_pmt}"
         answers = self.stability_api.generate(
@@ -214,7 +217,6 @@ class T2I_generater_from_prompts:
         for i, prompt in enumerate(no_title_ko_pmt):
             # 한국어 설명을 프롬프트와 함께 이미지 생성 함수에 전달합니다.
             # 이미지 생성 함수를 호출하여 이미지를 생성하고 해당 이미지의 경로를 받아옵니다.
-            print(f"이미지 생성 중 : {i}")
             page = i + 1
             img_path = t2i_gen.story_image(no_title_ko_pmt[i], no_title_eng_pmt[i], title, user_id=user_id, page=page, initial_seed=initial_seed, initial_image=initial_image)
             # 이미지 생성이 성공하면 이미지 경로를 출력하고, 실패하면 실패 메시지를 출력합니다.
