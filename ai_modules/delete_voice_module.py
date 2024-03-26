@@ -10,11 +10,7 @@ class Delete_voice_module:
     async def delete_voice(self, voice_id: str):
         print("---- [delete_voice] ----")
 
-        # response = requests.request("DELETE", self.url + voice_id, headers=self.headers)
-        # print(response.text)
-
         async with httpx.AsyncClient() as client:
             response = await client.delete(self.url + voice_id, headers=self.headers)
-        print(response.text)
         return response
 

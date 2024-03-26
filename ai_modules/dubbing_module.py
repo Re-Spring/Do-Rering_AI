@@ -19,7 +19,6 @@ class Dubbing_voice_cloning:
     def fetch_cloned_voices(self):
         response = requests.get(self.url, headers=self.headers)
         data = response.json()
-        # return [voice for voice in data["voices"] if voice["category"] == "cloned"]
         return data["voices"]
 
     def generate_audio(self, title, story_text, user_id, num):
@@ -27,7 +26,6 @@ class Dubbing_voice_cloning:
         matching_voices = [voice for voice in self.cloned_voices if voice["category"] == "cloned" and voice["name"] == user_id]
         if matching_voices:
             user_voice_id = matching_voices[0]["voice_id"]
-            print("[Dubbing_voice_cloning] generate_audio user_voice_id : ", user_voice_id)
         else:
             raise ValueError("Invalid user ID")
         output_filename = f"{self.audio_path}/{user_id}/{title}/{title}_{num}Page.wav"
@@ -35,11 +33,6 @@ class Dubbing_voice_cloning:
 
         if not output_path.exists():
             output_path.mkdir(parents=True)
-
-        # client = AsyncElevenLabs(
-        #     api_key=self.api_key,
-        #     httpx_client=httpx.AsyncClient(...)
-        # )
 
         client = ElevenLabs(
             api_key=self.api_key

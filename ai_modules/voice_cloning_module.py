@@ -58,11 +58,6 @@ class Voice_cloning_module:
     async def clone_voice(self, user_id: str, files: list):
         print("---- [clone_voice] ----")
 
-        # client = AsyncElevenLabs(
-        #     api_key=self.api_key,
-        #     httpx_client=httpx.AsyncClient(...)
-        # )
-
         client = ElevenLabs(
             api_key=self.api_key
         )
@@ -75,14 +70,10 @@ class Voice_cloning_module:
                 files=files,
             )
 
-            print("voice에 뭐 찍히는지 확인 : ", voice)
-
             user_voice_id = voice.voice_id
-            print("voice_id 확인 : ", user_voice_id)
 
             return user_voice_id
 
         except Exception as e:
-            print(f"An error occurred: {str(e)}")
 
             return None
