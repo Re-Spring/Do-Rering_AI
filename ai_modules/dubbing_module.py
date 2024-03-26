@@ -1,7 +1,7 @@
 # voice_cloning.py
-from elevenlabs.client import ElevenLabs
+import httpx
+from elevenlabs.client import ElevenLabs, AsyncElevenLabs
 import requests
-# from elevenlabs import generate
 from pathlib import Path
 
 class Dubbing_voice_cloning:
@@ -30,11 +30,16 @@ class Dubbing_voice_cloning:
             print("[Dubbing_voice_cloning] generate_audio user_voice_id : ", user_voice_id)
         else:
             raise ValueError("Invalid user ID")
-        output_filename = f"{self.audio_path}/{user_id}/{title}/{title}_{num + 1}Page.wav"
+        output_filename = f"{self.audio_path}/{user_id}/{title}/{title}_{num}Page.wav"
         output_path = Path(f"{self.audio_path}/{user_id}/{title}")
 
         if not output_path.exists():
             output_path.mkdir(parents=True)
+
+        # client = AsyncElevenLabs(
+        #     api_key=self.api_key,
+        #     httpx_client=httpx.AsyncClient(...)
+        # )
 
         client = ElevenLabs(
             api_key=self.api_key

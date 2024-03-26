@@ -1,29 +1,18 @@
 import os
 import tempfile
 import wave
+
+import httpx
 import numpy as np
 import noisereduce as nr
 import io
-import requests
-from elevenlabs.client import ElevenLabs
+from elevenlabs.client import ElevenLabs, AsyncElevenLabs
 from fastapi import UploadFile
 
 
 class Voice_cloning_module:
     def __init__(self, api_key):
         self.api_key = api_key
-        # self.headers = {
-        #     "Accept": "application/json",
-        #     "xi-api-key": api_key,
-        #     "Content-Type": "application/json"
-        # }
-        # self.url = "https://api.elevenlabs.io/v1/voices"
-        # self.cloned_voices = self.fetch_cloned_voices()
-
-    # def fetch_cloned_voices(self):
-    #     response = requests.get(self.url, headers=self.headers)
-    #     data = response.json()
-    #     return [voice for voice in data["voices"] if voice["category"] == "cloned"]
 
     def verify_wav_file(self, file_stream):
         try:
@@ -69,6 +58,11 @@ class Voice_cloning_module:
     async def clone_voice(self, user_id: str, files: list):
         print("---- [clone_voice] ----")
 
+        # client = AsyncElevenLabs(
+        #     api_key=self.api_key,
+        #     httpx_client=httpx.AsyncClient(...)
+        # )
+
         client = ElevenLabs(
             api_key=self.api_key
         )
@@ -83,32 +77,10 @@ class Voice_cloning_module:
 
             print("voice에 뭐 찍히는지 확인 : ", voice)
 
-            # # 클론이 완료되면 클론된 보이스 목록을 다시 가져옴
-            # self.cloned_voices = self.fetch_cloned_voices()
-
             user_voice_id = voice.voice_id
             print("voice_id 확인 : ", user_voice_id)
 
             return user_voice_id
-
-        # try:
-        #     files_data = [('files', (file, open(file, 'rb'), 'application/octet-stream')) for file in files]
-        #     print("files_data 확인 : ", files_data)
-        #
-        #     url = "https://api.elevenlabs.io/v1/voices/add"
-        #
-        #     payload = f"-----011000010111000001101001\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\n{user_id}\r\n-----011000010111000001101001\r\nContent-Disposition: form-data; name=\"files\"\r\n\r\n[\n  \"{files_data}\"\n]\r\n-----011000010111000001101001\r\nContent-Disposition: form-data; name=\"description\"\r\n\r\n\"Read fairy tales in a friendly and cheerful way.\"\r\n-----011000010111000001101001--\r\n\r\n"
-        #     headers = {
-        #         "xi-api-key": self.api_key,
-        #         "Content-Type": "multipart/form-data"
-        #     }
-        #
-        #     response = requests.request("POST", url, data=payload, headers=headers)
-        #
-        #     print("clone_voice response 확인 : ", response)
-        #     print("voice_id 확인 : ", response.text)
-        #
-        #     return response.text
 
         except Exception as e:
             print(f"An error occurred: {str(e)}")
