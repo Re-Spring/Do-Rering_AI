@@ -16,7 +16,7 @@ class StoryModel:
 
             if fairytale_code:
                 print("Record inserted and selected successfully.")
-                return str(fairytale_code[0])  # fairytale_code를 문자열로 변환하여 리턴합니다.
+                return str(fairytale_code)  # fairytale_code를 문자열로 변환하여 리턴합니다.
             else:
                 print("Record inserted but no corresponding fairytale_code found.")
                 return None
