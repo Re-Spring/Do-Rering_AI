@@ -18,4 +18,3 @@ def create_db_connection():
     except Error as e:
         print(f"데이터베이스 연결 실패: '{e}'")
         raise e  # 예외를 다시 발생시켜 호출자에게 알립니다.
-
