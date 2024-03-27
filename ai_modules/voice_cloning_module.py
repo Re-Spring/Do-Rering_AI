@@ -75,5 +75,5 @@ class Voice_cloning_module:
             return user_voice_id
 
         except Exception as e:
-
+            print(e)
             return None

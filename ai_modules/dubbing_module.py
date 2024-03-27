@@ -21,13 +21,13 @@ class Dubbing_voice_cloning:
         data = response.json()
         return data["voices"]
 
-    def generate_audio(self, title, story_text, user_id, num):
+    def generate_audio(self, title, story_text, user_id, num, voice_id):
         print("---- [generate_audio] ----")
-        matching_voices = [voice for voice in self.cloned_voices if voice["category"] == "cloned" and voice["name"] == user_id]
-        if matching_voices:
-            user_voice_id = matching_voices[0]["voice_id"]
-        else:
-            raise ValueError("Invalid user ID")
+        # matching_voices = [voice for voice in self.cloned_voices if voice["category"] == "cloned" and voice["name"] == user_id]
+        # if matching_voices:
+        #     user_voice_id = matching_voices[0]["voice_id"]
+        # else:
+        #     raise ValueError("Invalid user ID")
         output_filename = f"{self.audio_path}/{user_id}/{title}/{title}_{num}Page.wav"
         output_path = Path(f"{self.audio_path}/{user_id}/{title}")
 
@@ -41,7 +41,7 @@ class Dubbing_voice_cloning:
         # 텍스트를 음성으로 변환(이터러블한 제너레이터 객체를 반환)
         audio = client.generate(
             text=story_text,
-            voice=user_voice_id,
+            voice=voice_id,
             model="eleven_multilingual_v2"
         )
 

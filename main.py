@@ -81,6 +81,7 @@ async def generate_story(request: Request):
     user_id = request_data["userId"]
     user_code = request_data["userCode"]
     token = request_data["token"]
+    voice_id = request_data["voiceId"]
     len_story = len(story_data)
     korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
 
@@ -99,7 +100,9 @@ async def generate_story(request: Request):
     
     print("generate 직전")
     title_image_path, main_image_paths = await t2i_module.generate_entire_story_image(title=title, user_id=user_id, summary=summary_prompts, no_title_ko_pmt=no_title_ko_pmt, count=len_story)
+    
     audio_paths = []
+
 
     # 사용자가 설정한 목소리가 'myVoice'가 아닌 경우, AI가 제공하는 목소리로 음성 파일을 생성합니다.
     if (voice != "myVoice"):
@@ -119,7 +122,7 @@ async def generate_story(request: Request):
             # 현재 페이지를 지정합니다.
             page = f"paragraph{i}"
             # 사용자의 목소리로 음성을 복제하는 모듈을 호출합니다.
-            audio_file_path = clone_dubbing_module.generate_audio(title, story_data[page], user_id=user_id, num=i)
+            audio_file_path = clone_dubbing_module.generate_audio(title, story_data[page], user_id=user_id, num=i, voice_id=voice_id)
             audio_paths.append(audio_file_path)
 
     eng_title = english_prompts[0]
@@ -152,7 +155,7 @@ async def generate_story(request: Request):
     story_summmary = json.loads(story_summmary.body.decode('utf-8'))
 
 
-    fairytale_code = story_controller.insert_and_select_story_controller([user_code, story_summmary, title, genre, title_image_paths[2]])
+    fairytale_code = story_controller.insert_and_select_story_controller([user_code, story_summmary, title, genre, title_image_path[2]])
     story_controller.insert_video_controller([fairytale_code, concatenate_video_path])
 
 
