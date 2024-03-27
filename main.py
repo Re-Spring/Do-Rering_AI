@@ -152,7 +152,7 @@ async def generate_story(request: Request):
     story_summmary = json.loads(story_summmary.body.decode('utf-8'))
 
 
-    fairytale_code = story_controller.insert_and_select_story_controller([user_code, story_summmary, title, genre, title_image_path])
+    fairytale_code = story_controller.insert_and_select_story_controller([user_code, story_summmary, title, genre, title_image_paths[2]])
     story_controller.insert_video_controller([fairytale_code, concatenate_video_path])
 
 
