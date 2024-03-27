@@ -27,6 +27,7 @@ from db.controller.story_controller import StoryController
 from db.controller.clone_controller import CloneController
 from pyfcm import FCMNotification
 from pydantic import BaseModel
+from ai_modules.dalle3_module import Text_to_image
 
 
 # prompt key 값 가져오기
@@ -54,8 +55,9 @@ llm_module = Large_language_model_module(api_key=OPEN_API_KEY)
 ai_voice_module = Voice_synthesizer(api_key=OPEN_API_KEY, audio_path=audio_path)
 voice_cloning = Voice_cloning_module(api_key=VOICE_CLONING_API_KEY)
 clone_dubbing_module = Dubbing_voice_cloning(api_key=VOICE_CLONING_API_KEY, audio_path=audio_path)
-t2i_module = Text_to_image(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path, character_image_path=character_image_path)
-t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path, character_image_path=character_image_path)
+# t2i_module = Text_to_image(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path, character_image_path=character_image_path)
+# t2i_prompt_module = T2I_generater_from_prompts(api_key=STABILITY_KEY, image_font_path=image_font_path, image_path=image_path, character_image_path=character_image_path)
+t2i_module = Text_to_image(api_key=OPEN_API_KEY, image_font_path=image_font_path, image_path=image_path, character_image_path=character_image_path)
 deepl_module = Deepl_api(api_key=DEEPL_API_KEY)
 video_module = Video_module(video_path=config.video_path, audio_path=config.audio_path)
 delete_module = Delete_voice_module(api_key=VOICE_CLONING_API_KEY)
@@ -68,7 +70,7 @@ smile = "\U0001F601"
 
 @app.post("/generateStory")
 async def generate_story(request: Request):
-
+    print("들어옴")
     request_data = await request.json()
     story = await llm_module.generate_story(request)
     story_data = json.loads(story.body.decode('utf-8'))
@@ -79,7 +81,6 @@ async def generate_story(request: Request):
     user_id = request_data["userId"]
     user_code = request_data["userCode"]
     token = request_data["token"]
-
     len_story = len(story_data)
     korean_prompts = [story_data["paragraph" + str(i)] for i in range(len_story)]
 
@@ -95,7 +96,9 @@ async def generate_story(request: Request):
     summary_prompts = ""
     for i in range(1, 3):
         summary_prompts += english_prompts[i]
-
+    
+    print("generate 직전")
+    title_image_path, main_image_paths = await t2i_module.generate_entire_story_image(title=title, user_id=user_id, summary=summary_prompts, no_title_ko_pmt=no_title_ko_pmt, count=len_story)
     audio_paths = []
 
     # 사용자가 설정한 목소리가 'myVoice'가 아닌 경우, AI가 제공하는 목소리로 음성 파일을 생성합니다.
@@ -106,7 +109,7 @@ async def generate_story(request: Request):
             # 현재 페이지를 지정합니다.
             page = f"paragraph{i}"
             # AI 음성 모듈을 사용하여 음성 파일을 생성합니다.
-            audio_file_path = ai_voice_module.generate_audio_file(voice, story_data[page], title,i, user_id=user_id)
+            audio_file_path = ai_voice_module.generate_audio_file(voice, story_data[page], title, i, user_id=user_id)
             audio_paths.append(audio_file_path)
     else:
         # 'myVoice'가 선택된 경우, 사용자의 목소리로 음성을 복제하여 음성 파일을 생성합니다.
@@ -123,12 +126,14 @@ async def generate_story(request: Request):
 
     # 여기에 캐릭터 이미지 생성하는 곳
     # 0 : img, 1 : seed, 2 : character_image_path
-    character_image_path = t2i_module.character_image(title=title, eng_title=eng_title, user_id=user_id)
+    # character_image_path = t2i_module.character_image(title=title, eng_title=eng_title, user_id=user_id)
+    #
+    # title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id, seed=character_image_path[1], initial_image=character_image_path[0])
+    #
+    # main_image_paths = (t2i_prompt_module.story_images_from_prompts(
+    #         no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id, initial_seed=character_image_path[1], initial_image=title_image_paths[0]))
 
-    title_image_paths = t2i_prompt_module.title_images_from_prompt(eng_title=eng_title, title=title, user_id=user_id, seed=character_image_path[1], initial_image=character_image_path[0])
 
-    main_image_paths = (t2i_prompt_module.story_images_from_prompts(
-            no_title_ko_pmt=no_title_ko_pmt, no_title_eng_pmt=no_title_eng_pmt, title=title, user_id=user_id, initial_seed=character_image_path[1], initial_image=title_image_paths[0]))
 
     video_paths = []
 
@@ -136,7 +141,7 @@ async def generate_story(request: Request):
         audio_name = f"{user_id}/{title}/{title}_{i}Page.wav"
         audio_len = video_module.get_audio_length(audio_name=audio_name)
         if i == 0:
-            video_path = video_module.generate_video(page=i, title=title, image_path=title_image_paths[2], audio_path=audio_paths[i], audio_length=audio_len)
+            video_path = video_module.generate_video(page=i, title=title, image_path=title_image_path, audio_path=audio_paths[i], audio_length=audio_len)
         else:
             video_path = video_module.generate_video(page=i, title=title, image_path=main_image_paths[i-1], audio_path=audio_paths[i], audio_length=audio_len)
         video_paths.append(video_path)
