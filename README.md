@@ -9,7 +9,7 @@
 
 </div>
 
-# 🔥 Do-Rering FRONT
+# 🔥 Do-Rering PYTHON BACK
 > **하이미디어 아카데미 인공지능(AI-X) 프로젝트 부트캠프 3기** <br/> **개발기간: 2024.2 ~ 2024.3**
 
 <br/>
