@@ -81,7 +81,7 @@
 
 > 
 					
-| <img src="https://github.com/Re-Spring/.github/assets/137472733/389b07fa-8f3a-484d-ab51-95739c6051ce" width="150" height="150" /> | <img src="https://github.com/Re-Spring/.github/assets/137472733/e8fb29b7-eda4-44f6-862c-01225a5f8b62" width="150" height="150" /> | <img src="https://github.com/Re-Spring/.github/assets/137472733/14d9e2ac-beb8-4f94-818f-ac61240f8e83" width="150" height="150" /> | <img src="https://github.com/Re-Spring/.github/assets/137472733/82cb58a7-ef7d-4146-aede-33db3b3d462d" width="150" height="150" /> |  |
+| <img src="https://github.com/Re-Spring/.github/assets/137472733/389b07fa-8f3a-484d-ab51-95739c6051ce" width="150" height="150" /> | <img src="https://github.com/Re-Spring/.github/assets/137472733/e8fb29b7-eda4-44f6-862c-01225a5f8b62" width="150" height="150" /> | <img src="https://github.com/Re-Spring/.github/assets/137472733/14d9e2ac-beb8-4f94-818f-ac61240f8e83" width="150" height="150" /> | <img src="https://github.com/Re-Spring/.github/assets/137472733/82cb58a7-ef7d-4146-aede-33db3b3d462d" width="150" height="150" /> | <img src="https://github.com/Re-Spring/.github/assets/140992400/d719a258-b984-40b2-a9ea-375686ae8f96" width="150" height="150" /> |
 | :---: | :---: | :---: | :---: | :---: |
 | 박지영 | 이선호 | 조현진 | 이동주 | 신주현 |
 | voice clonning<br/>로그인/회원가입  | text to image<br/>ERD 설계/배포 | 더빙API<br/>UI/UX | llm prompt engineering<br/>text to image | text to image<br/>고객문의 게시판 |
