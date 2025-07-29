@@ -85,7 +85,7 @@
 | :---: | :---: | :---: | :---: | :---: |
 | 박지영 | 이선호 | 조현진 | 이동주 | 신주현 |
 | voice clonning<br/>로그인/회원가입  | text to image<br/>ERD 설계/배포 | 더빙API<br/>UI/UX | llm prompt engineering<br/>text to image | text to image<br/>고객문의 게시판 |
-|   [@jiyeong08](https://github.com/jiyeong08)   |    [@Aiden](https://github.com/08166)  |  [@bockson](https://github.com/bockson) | [@ezzzzdev](https://github.com/ezzzzdev)  | [@RufusVein](https://github.com/RufusVein)  |
+|   [@jiyeong08](https://github.com/jiyeong08)   |    [@08166](https://github.com/08166)  |  [@bockson](https://github.com/bockson) | [@ezzzzdev](https://github.com/ezzzzdev)  | [@RufusVein](https://github.com/RufusVein)  |
 
 
 </br>
